@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 
+	"strava_bot/internals/repository"
+	"strava_bot/internals/service"
 	"strava_bot/internals/telegram"
 	boltdb "strava_bot/pkg/base/boltDb"
 
@@ -55,7 +57,10 @@ func main() {
 		}
 	}()
 	base := boltdb.NewBase(db)
-	tg_bot := telegram.NewBot(bot, base)
+
+	rep := repository.NewRepository(base)
+	service := service.NewService(rep)
+	tg_bot := telegram.NewBot(bot, service)
 	tg_bot.Start()
 
 }
