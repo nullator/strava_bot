@@ -10,7 +10,7 @@ import (
 	"strava_bot/internals/repository"
 	"strava_bot/internals/service"
 	"strava_bot/internals/telegram"
-	boltdb "strava_bot/pkg/base/boltDb"
+	boltdb "strava_bot/pkg/base/boltdb"
 
 	"github.com/boltdb/bolt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
