@@ -7,7 +7,7 @@ import (
 
 type Strava interface {
 	//CreateAuthLink(iserID int64) (string, error)
-	Auth(userID, code string, chatID int64) (models.StravaUser, error)
+	Auth(user *models.AuthHandler) (int, *models.StravaUser, error)
 }
 
 type Service struct {

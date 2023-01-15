@@ -1,11 +1,18 @@
 package models
 
 type StravaUser struct {
-	Expies_at     int
-	Expires_in    int
-	Refresh_token string
-	Access_token  string
-	Athlete       *StravaAthlete
+	Token_type    string        `json:"token_type"`
+	Expires_at    int           `json:"expires_at"`
+	Expires_in    int           `json:"expires_in"`
+	Refresh_token string        `json:"refresh_token"`
+	Access_token  string        `json:"access_token"`
+	Athlete       StravaAthlete `json:"athlete"`
+}
+
+type AuthHandler struct {
+	ID    string `form:"state"`
+	Code  string `form:"code"`
+	Scope string `form:"scope"`
 }
 
 type StravaAthlete struct {

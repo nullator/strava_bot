@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 
+	"strava_bot/internals/handler"
+	"strava_bot/internals/models"
 	"strava_bot/internals/repository"
 	"strava_bot/internals/service"
 	"strava_bot/internals/telegram"
@@ -60,6 +62,15 @@ func main() {
 
 	rep := repository.NewRepository(base)
 	service := service.NewService(rep)
+	handlers := handler.NewHandler(service)
+	srv := new(models.Server)
+	go func() {
+		err := srv.Run(os.Getenv("SERVER_PORT"), handlers.InitRouters())
+		if err != nil {
+			log.Fatalf("error running server: %v", err)
+		}
+	}()
+
 	tg_bot := telegram.NewBot(bot, service)
 	tg_bot.Start()
 
