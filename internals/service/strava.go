@@ -22,9 +22,9 @@ func NewStravaService(rep *repository.Repository) *StravaService {
 	return &StravaService{rep: rep}
 }
 
-func (s *StravaService) Auth(user *models.AuthHandler) (int, *models.StravaUser, error) {
+func (s *StravaService) Auth(input *models.AuthHandler) (int, *models.StravaUser, error) {
 	// validate auth
-	code, err := validateAuthModel(user)
+	code, err := validateAuthModel(input)
 	if err != nil {
 		return code, nil, err
 	}
@@ -33,7 +33,7 @@ func (s *StravaService) Auth(user *models.AuthHandler) (int, *models.StravaUser,
 	request := map[string]string{
 		"client_id":     os.Getenv("STRAVA_CLIENT_ID"),
 		"client_secret": os.Getenv("STRAVA_SECRET"),
-		"code":          user.Code,
+		"code":          input.Code,
 		"grant_type":    "authorization_code",
 	}
 
@@ -65,5 +65,5 @@ func (s *StravaService) Auth(user *models.AuthHandler) (int, *models.StravaUser,
 	}
 
 	// write data to repository
-	return s.rep.Auth(user, &res)
+	return s.rep.Auth(input, &res)
 }

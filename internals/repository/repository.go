@@ -15,12 +15,12 @@ func NewRepository(db base.Base) *Repository {
 	return &Repository{db: db}
 }
 
-func (r *Repository) Auth(user *models.AuthHandler,
+func (r *Repository) Auth(input *models.AuthHandler,
 	resp *models.StravaUser) (int, *models.StravaUser, error) {
 	strava_id := fmt.Sprintf("%d", resp.Athlete.Id)
 	expires := fmt.Sprintf("%d", resp.Expires_at)
 
-	err := r.db.Save("id", strava_id, user.ID)
+	err := r.db.Save("id", strava_id, input.ID)
 	if err != nil {
 		return http.StatusInternalServerError, resp, err
 	}

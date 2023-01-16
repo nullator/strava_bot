@@ -24,23 +24,22 @@ func (h *Handler) InitRouters() *gin.Engine {
 }
 
 func (h *Handler) auth(c *gin.Context) {
-	var user *models.AuthHandler
+	var input *models.AuthHandler
 	var strava_user *models.StravaUser
 
-	if c.ShouldBind(&user) == nil {
-		log.Println(user.ID)
-		log.Println(user.Code)
-		log.Println(user.Scope)
+	err := c.ShouldBind(&input)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
 	}
 
-	code, strava_user, err := h.services.Auth(user)
+	code, strava_user, err := h.services.Auth(input)
 	if err != nil {
 		c.JSON(code, err.Error())
 		return
 	}
+	log.Printf(strava_user.Athlete.Username)
 
-	c.JSON(http.StatusOK, gin.H{
-		"login at": strava_user.Athlete.Username,
-		"status":   "OK",
-	})
+	c.Redirect(http.StatusMovedPermanently, "https://t.me/strava_ru_bot")
+
 }
