@@ -21,21 +21,20 @@ func (db *base) Save(key string, value string, bucket string) error {
 	return err
 }
 
-func (db *base) Get(key string, bucket string) (*string, error) {
-	var value *string
+func (db *base) Get(key string, bucket string) (string, error) {
+	var value string
 	err := db.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		if b != nil {
 			data := b.Get([]byte(key))
-			v := string(data)
-			value = &v
+			value = string(data)
 		} else {
-			value = nil
+			value = ""
 		}
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	return value, err
 }
