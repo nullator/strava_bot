@@ -5,16 +5,19 @@ import (
 	"net/http"
 	"strava_bot/internals/models"
 	"strava_bot/internals/service"
+	"strava_bot/internals/telegram"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
 	services *service.Service
+	bot      *telegram.Bot
 }
 
-func NewHandler(services *service.Service) *Handler {
-	return &Handler{services: services}
+func NewHandler(services *service.Service, bot *telegram.Bot) *Handler {
+	return &Handler{services, bot}
 }
 
 func (h *Handler) InitRouters() *gin.Engine {
@@ -38,8 +41,14 @@ func (h *Handler) auth(c *gin.Context) {
 		c.JSON(code, err.Error())
 		return
 	}
-	log.Printf(strava_user.Athlete.Username)
 
 	c.Redirect(http.StatusMovedPermanently, "https://t.me/strava_ru_bot")
+
+	tg_id, err := strconv.ParseInt(input.ID, 10, 64)
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	h.bot.SuccsesAuth(tg_id, strava_user.Athlete.Username)
 
 }

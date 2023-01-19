@@ -1,6 +1,7 @@
 package telegram
 
 import (
+	"fmt"
 	"log"
 	"strava_bot/internals/service"
 
@@ -36,4 +37,15 @@ func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 			}
 		}
 	}
+}
+
+func (b *Bot) SuccsesAuth(id int64, username string) {
+	msg_txt := fmt.Sprintf("Успешная авторизация в аккаунт *%s*", username)
+	msg := tgbotapi.NewMessage(id, msg_txt)
+	msg.ParseMode = "Markdown"
+	_, err := b.bot.Send(msg)
+	if err != nil {
+		log.Println(err.Error())
+	}
+
 }

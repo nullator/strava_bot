@@ -37,3 +37,11 @@ type Athlete struct {
 	Friend         []string `json:"friend"`         // null,
 	Follower       []string `json:"follower"`       // null
 }
+
+type RespondRefreshToken struct {
+	Token_type    string `json:"token_type"`
+	Access_token  string `json:"access_token"`
+	Expires_at    int    `json:"expires_at"`
+	Expires_in    int    `json:"expires_in"`
+	Refresh_token string `json:"refresh_token"`
+}

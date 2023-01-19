@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	commandStart     = "start"
-	commandSubscribe = "subscribe"
-	commandFeedback  = "feedback"
+	commandStart    = "start"
+	commandGet      = "get"
+	commandFeedback = "feedback"
 
 	strava_auth_URL = "https://www.strava.com/oauth/authorize?" +
 		"client_id=%s&" +
@@ -32,6 +32,12 @@ func (b *Bot) handleCommand(message *tgbotapi.Message) error {
 		if err != nil {
 			return err
 		}
+
+	case commandGet:
+		err := b.handleGetComand(message)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -40,11 +46,33 @@ func (b *Bot) handleCommand(message *tgbotapi.Message) error {
 func (b *Bot) handleStartComand(message *tgbotapi.Message) error {
 	URL := fmt.Sprintf(strava_auth_URL, os.Getenv("STRAVA_CLIENT_ID"),
 		os.Getenv("STRAVA_REDIRECT_URL"), message.Chat.ID)
-	msg := tgbotapi.NewMessage(message.Chat.ID, URL)
+
+	// [user mention](tg://user?id=12345)
+	msg_text := fmt.Sprintf("Для авторизации перейди по ссылке:\n[https://strava.com/](%s)", URL)
+	msg := tgbotapi.NewMessage(message.Chat.ID, msg_text)
+
+	msg.ParseMode = "Markdown"
 	_, err := b.bot.Send(msg)
 	if err != nil {
 		return err
 	}
 	log.Println("Выполнена команда Start")
 	return nil
+}
+
+func (b *Bot) handleGetComand(message *tgbotapi.Message) error {
+	id := message.Chat.ID
+	var msg tgbotapi.MessageConfig
+	msg.ChatID = id
+
+	res, err := b.service.Strava.RefreshToken(id)
+	if err != nil {
+		msg.Text = err.Error()
+	} else {
+		msg.Text = res
+	}
+
+	_, err = b.bot.Send(msg)
+	return err
+
 }

@@ -62,7 +62,8 @@ func main() {
 
 	rep := repository.NewRepository(base)
 	service := service.NewService(rep)
-	handlers := handler.NewHandler(service)
+	tg_bot := telegram.NewBot(bot, service)
+	handlers := handler.NewHandler(service, tg_bot)
 	srv := new(models.Server)
 	go func() {
 		err := srv.Run(os.Getenv("SERVER_PORT"), handlers.InitRouters())
@@ -71,7 +72,6 @@ func main() {
 		}
 	}()
 
-	tg_bot := telegram.NewBot(bot, service)
 	tg_bot.Start()
 
 }

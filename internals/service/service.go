@@ -8,6 +8,8 @@ import (
 type Strava interface {
 	//CreateAuthLink(iserID int64) (string, error)
 	Auth(input *models.AuthHandler) (int, *models.StravaUser, error)
+	RefreshToken(id int64) (string, error)
+	getNewToken(id int64) error
 }
 
 type Service struct {
