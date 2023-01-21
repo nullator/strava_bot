@@ -12,14 +12,14 @@ import (
 const (
 	commandStart    = "start"
 	commandGet      = "get"
-	commandFeedback = "feedback"
+	commandSettings = "settings"
 
 	strava_auth_URL = "https://www.strava.com/oauth/authorize?" +
 		"client_id=%s&" +
 		"redirect_uri=%s&" +
 		"response_type=code&" +
 		"approval_prompt=auto&" +
-		"scope=activity:write,read&" +
+		"scope=activity:write,profile:read_all,activity:read,read&" +
 		"state=%d"
 )
 
@@ -38,6 +38,13 @@ func (b *Bot) handleCommand(message *tgbotapi.Message) error {
 		if err != nil {
 			return err
 		}
+
+	case commandSettings:
+		err := b.handleSettingsComand(message)
+		if err != nil {
+			return err
+		}
+
 	}
 
 	return nil

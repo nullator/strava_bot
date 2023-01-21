@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"io"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"strava_bot/internals/handler"
 	"strava_bot/internals/models"
@@ -73,5 +76,19 @@ func main() {
 	}()
 
 	tg_bot.Start()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
+	<-quit
+
+	err = srv.Stop(context.Background())
+	if err != nil {
+		log.Fatalf("error stopping server: %v", err)
+	}
+
+	err = db.Close()
+	if err != nil {
+		log.Fatalf("error closing db: %v", err)
+	}
 
 }

@@ -84,7 +84,8 @@ func (s *StravaService) RefreshToken(id int64) (string, error) {
 	if delta <= 3600 {
 		return "Token was refreshed", s.getNewToken(id)
 	} else {
-		return "Token was not refreshed", nil
+		token, err := s.rep.GetAccesToken(id)
+		return token, err
 	}
 
 }

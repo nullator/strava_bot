@@ -29,12 +29,41 @@ func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 	for update := range updates {
 		if update.Message != nil {
 			if update.Message.IsCommand() {
-				log.Printf("[%s] ввёл команду %s", update.Message.From.UserName, update.Message.Text)
+				log.Printf("[%s] ввёл команду %s",
+					update.Message.From.UserName, update.Message.Text)
 				if err := b.handleCommand(update.Message); err != nil {
-					log.Printf("При обработке команды %s произошла ошибка %s", update.Message.Command(), err)
+					log.Printf("При обработке команды %s произошла ошибка %s",
+						update.Message.Command(), err)
 				}
 				continue
 			}
+		} else if update.CallbackQuery != nil {
+			q := update.CallbackQuery.Data
+			switch q {
+			case "use_def":
+				log.Println("def")
+				buttons := make([][]tgbotapi.InlineKeyboardButton, 0)
+				msg := tgbotapi.NewEditMessageReplyMarkup(update.CallbackQuery.Message.Chat.ID,
+					update.CallbackQuery.Message.MessageID,
+					tgbotapi.InlineKeyboardMarkup{InlineKeyboard: buttons})
+				_, err := b.bot.Send(msg)
+				if err != nil {
+					log.Println(err)
+				}
+
+			case "use_var":
+				log.Println("var")
+				buttons := make([][]tgbotapi.InlineKeyboardButton, 0)
+				msg := tgbotapi.NewEditMessageReplyMarkup(update.CallbackQuery.Message.Chat.ID,
+					update.CallbackQuery.Message.MessageID,
+					tgbotapi.InlineKeyboardMarkup{InlineKeyboard: buttons})
+				_, err := b.bot.Send(msg)
+				if err != nil {
+					log.Println(err)
+				}
+
+			}
+
 		}
 	}
 }

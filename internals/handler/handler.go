@@ -49,6 +49,7 @@ func (h *Handler) auth(c *gin.Context) {
 		log.Println(err.Error())
 	}
 
+	log.Printf("get scope: %s\n", input.Scope)
 	h.bot.SuccsesAuth(tg_id, strava_user.Athlete.Username)
 
 }
