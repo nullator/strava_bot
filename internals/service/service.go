@@ -12,12 +12,18 @@ type Strava interface {
 	getNewToken(id int64) error
 }
 
+type Telegram interface {
+	GetFile(file_id string) (string, error)
+}
+
 type Service struct {
 	Strava
+	Telegram
 }
 
 func NewService(rep *repository.Repository) *Service {
 	return &Service{
-		Strava: NewStravaService(rep),
+		Strava:   NewStravaService(rep),
+		Telegram: NewTelegramService(),
 	}
 }

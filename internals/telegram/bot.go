@@ -37,6 +37,19 @@ func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 				}
 				continue
 			}
+
+			d := update.Message.Document
+			if d != nil {
+				log.Println(d.FileID)
+				log.Println(d.FileName)
+				file, err := b.service.Telegram.GetFile(d.FileID)
+				if err != nil {
+					log.Println(err)
+				} else {
+					log.Println(file)
+				}
+			}
+
 		} else if update.CallbackQuery != nil {
 			q := update.CallbackQuery.Data
 			switch q {
