@@ -39,35 +39,30 @@ func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 			}
 
 			d := update.Message.Document
+			id := update.Message.From.ID
 			if d != nil {
-				act, err := b.uploadActivity(d)
+				filename, err := b.douwnloadFile(d)
 				if err != nil {
 					log.Println(err.Error())
-					msg := tgbotapi.NewMessage(update.Message.From.ID,
-						"Не удалось обработать файл")
+					msg := tgbotapi.NewMessage(id, "Не удалось обработать файл")
 					msg.ParseMode = "Markdown"
 					_, err := b.bot.Send(msg)
 					if err != nil {
 						log.Println(err.Error())
 					}
 				} else {
-					msg_txt := fmt.Sprintf("Получен файл %s", act.File)
-					msg := tgbotapi.NewMessage(update.Message.From.ID, msg_txt)
+					msg_txt := fmt.Sprintf("Получен файл %s", filename)
+					msg := tgbotapi.NewMessage(id, msg_txt)
 					msg.ParseMode = "Markdown"
 					_, err = b.bot.Send(msg)
 					if err != nil {
 						log.Println(err.Error())
 					}
+
+					// upload file to strava
+
 				}
 
-				// log.Println(d.FileID)
-				// log.Println(d.FileName)
-				// file, err := b.service.Telegram.GetFile(d.FileID)
-				// if err != nil {
-				// 	log.Println(err)
-				// } else {
-				// 	log.Println(file)
-				// }
 			}
 
 		} else if update.CallbackQuery != nil {
