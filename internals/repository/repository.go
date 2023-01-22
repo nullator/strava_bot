@@ -120,3 +120,23 @@ func (r *Repository) GetExpies(id int64) (string, error) {
 	return exp, nil
 
 }
+
+func (r *Repository) SaveActivityId(id int64, activity_id string) error {
+	tg_id := fmt.Sprintf("%d", id)
+	err := r.db.Save("last_activity_id", activity_id, tg_id)
+	return err
+}
+
+func (r *Repository) GetActivityId(id int64) (string, error) {
+	tg_id := fmt.Sprintf("%d", id)
+
+	activity_id, err := r.db.Get("last_activity_id", tg_id)
+	if err != nil {
+		return "", err
+	}
+	if activity_id == "" {
+		return "", errors.New("no activity_id in DB")
+	}
+
+	return activity_id, nil
+}

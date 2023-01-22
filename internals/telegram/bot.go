@@ -51,7 +51,12 @@ func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 						log.Println(err.Error())
 					}
 				} else {
-					msg_txt := fmt.Sprintf("Получен файл %s", filename)
+					// upload file to strava
+					err = b.service.UploadActivity(filename, id)
+					if err != nil {
+						log.Println(err.Error())
+					}
+					msg_txt := "Файл тренировки успешно обработан и загружен в Strava"
 					msg := tgbotapi.NewMessage(id, msg_txt)
 					msg.ParseMode = "Markdown"
 					_, err = b.bot.Send(msg)
@@ -59,7 +64,11 @@ func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 						log.Println(err.Error())
 					}
 
-					// upload file to strava
+					// get link to activity
+					// _, err = b.service.Strava.GetActivity(id)
+					// if err != nil {
+					// 	log.Println(err.Error())
+					// }
 
 				}
 

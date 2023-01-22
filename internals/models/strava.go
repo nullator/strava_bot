@@ -52,3 +52,12 @@ type UploadActivity struct {
 	Description string `json:"description"`
 	Name        string `json:"name"`
 }
+
+type RespondUploadActivity struct {
+	Id          int         `json:"id"`
+	Id_str      string      `json:"id_str"`
+	External_id interface{} `json:"external_id"`
+	Error       interface{} `json:"error"`
+	Status      string      `json:"status"`
+	Activity_id int         `json:"activity_id"`
+}

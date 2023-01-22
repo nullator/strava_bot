@@ -69,17 +69,7 @@ func (b *Bot) handleStartComand(message *tgbotapi.Message) error {
 
 func (b *Bot) handleGetComand(message *tgbotapi.Message) error {
 	id := message.Chat.ID
-	var msg tgbotapi.MessageConfig
-	msg.ChatID = id
-
-	res, err := b.service.Strava.RefreshToken(id)
-	if err != nil {
-		msg.Text = err.Error()
-	} else {
-		msg.Text = res
-	}
-
-	_, err = b.bot.Send(msg)
+	err := b.service.Strava.RefreshToken(id)
 	return err
 
 }
