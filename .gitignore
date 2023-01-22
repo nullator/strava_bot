@@ -27,3 +27,4 @@ README.MD
 *.db
 .DS_Store
 bolt.db.lock
+/activity

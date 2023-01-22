@@ -13,7 +13,7 @@ type Strava interface {
 }
 
 type Telegram interface {
-	GetFile(file_id string) (string, error)
+	GetFile(filename, fileid string) error
 }
 
 type Service struct {

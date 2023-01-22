@@ -45,3 +45,10 @@ type RespondRefreshToken struct {
 	Expires_in    int    `json:"expires_in"`
 	Refresh_token string `json:"refresh_token"`
 }
+
+type UploadActivity struct {
+	File        string `json:"file"`
+	Data_type   string `json:"data_type"`
+	Description string `json:"description"`
+	Name        string `json:"name"`
+}

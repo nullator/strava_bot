@@ -40,14 +40,34 @@ func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 
 			d := update.Message.Document
 			if d != nil {
-				log.Println(d.FileID)
-				log.Println(d.FileName)
-				file, err := b.service.Telegram.GetFile(d.FileID)
+				act, err := b.uploadActivity(d)
 				if err != nil {
-					log.Println(err)
+					log.Println(err.Error())
+					msg := tgbotapi.NewMessage(update.Message.From.ID,
+						"Не удалось обработать файл")
+					msg.ParseMode = "Markdown"
+					_, err := b.bot.Send(msg)
+					if err != nil {
+						log.Println(err.Error())
+					}
 				} else {
-					log.Println(file)
+					msg_txt := fmt.Sprintf("Получен файл %s", act.File)
+					msg := tgbotapi.NewMessage(update.Message.From.ID, msg_txt)
+					msg.ParseMode = "Markdown"
+					_, err = b.bot.Send(msg)
+					if err != nil {
+						log.Println(err.Error())
+					}
 				}
+
+				// log.Println(d.FileID)
+				// log.Println(d.FileName)
+				// file, err := b.service.Telegram.GetFile(d.FileID)
+				// if err != nil {
+				// 	log.Println(err)
+				// } else {
+				// 	log.Println(file)
+				// }
 			}
 
 		} else if update.CallbackQuery != nil {

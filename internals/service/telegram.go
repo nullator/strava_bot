@@ -17,11 +17,13 @@ func NewTelegramService() *TelegramService {
 	return &TelegramService{}
 }
 
-func (tg *TelegramService) GetFile(file_id string) (string, error) {
-	querry := fmt.Sprintf("https://api.telegram.org/bot%s/getFile?file_id=%s", os.Getenv("TG_TOKEN"), file_id)
+func (tg *TelegramService) GetFile(filename, fileid string) error {
+	// Get the telegram file path from file_id
+	querry := fmt.Sprintf("https://api.telegram.org/bot%s/getFile?file_id=%s",
+		os.Getenv("TG_TOKEN"), fileid)
 	req, err := http.NewRequest("GET", querry, nil)
 	if err != nil {
-		return "", err
+		return err
 	}
 	req.Header.Set("X-Custom-Header", "myvalue")
 	req.Header.Set("Content-Type", "application/json")
@@ -29,7 +31,7 @@ func (tg *TelegramService) GetFile(file_id string) (string, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", err
+		return err
 	}
 	defer resp.Body.Close()
 
@@ -37,37 +39,46 @@ func (tg *TelegramService) GetFile(file_id string) (string, error) {
 	var res models.TelegramFileIdResp
 	err = json.Unmarshal(body, &res)
 	if err != nil && err != io.EOF {
-		return "", err
+		return err
 	}
 
-	querry = fmt.Sprintf("https://api.telegram.org/file/bot%s/%s", os.Getenv("TG_TOKEN"), res.Result.File_path)
+	// download file from telegram server
+	querry = fmt.Sprintf("https://api.telegram.org/file/bot%s/%s", os.Getenv("TG_TOKEN"),
+		res.Result.File_path)
 	req, err = http.NewRequest("GET", querry, nil)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	resp, err = client.Do(req)
 	if err != nil {
-		return "", err
+		return err
 	}
 	defer resp.Body.Close()
 
 	file, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return err
 	}
-	f, err := os.OpenFile("test.pdf", os.O_CREATE, 0644)
+	err = os.MkdirAll("activity", os.ModePerm)
 	if err != nil {
-		return "", err
+		return err
+	}
+	f, err := os.OpenFile("activity/"+filename, os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
 	}
 	_, err = f.Write(file)
 	if err != nil {
-		return "", err
+		return err
 	}
+	defer func() {
+		err := f.Close()
+		if err != nil {
+			log.Println("error save and close activity file")
+		}
+	}()
 
-	body, _ = io.ReadAll(resp.Body)
-	log.Println(string(body))
-
-	return "OK", nil
+	return nil
 
 }
