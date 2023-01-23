@@ -19,7 +19,7 @@ const (
 		"redirect_uri=%s&" +
 		"response_type=code&" +
 		"approval_prompt=auto&" +
-		"scope=activity:write,profile:read_all,activity:read,read&" +
+		"scope=activity:write,read&" +
 		"state=%d"
 )
 
