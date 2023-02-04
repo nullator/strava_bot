@@ -63,6 +63,11 @@ func (s *StravaService) Auth(input *models.AuthHandler) (int, *models.StravaUser
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != 200 {
+		log.Printf("Autorization error: %v\n", resp.Status)
+		return http.StatusInternalServerError, nil, errors.New("autorization error")
+	}
+
 	// get Athlete model
 	body, _ := io.ReadAll(resp.Body)
 	var res models.StravaUser
@@ -138,6 +143,11 @@ func (s *StravaService) getNewToken(id int64) error {
 		return err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		log.Printf("Error get new refresh token: %v\n", resp.Status)
+		return errors.New("autorization error")
+	}
 
 	body, _ := io.ReadAll(resp.Body)
 	var res models.RespondRefreshToken
@@ -230,50 +240,50 @@ func (s *StravaService) UploadActivity(file string, id int64) error {
 	}
 }
 
-func (s *StravaService) GetActivity(id int64) (string, error) {
-	activity_id, err := s.rep.GetActivityId(id)
-	if err != nil {
-		log.Println("Ошибка получения activity_id")
-		return "", err
-	}
+// func (s *StravaService) GetActivity(id int64) (string, error) {
+// 	activity_id, err := s.rep.GetActivityId(id)
+// 	if err != nil {
+// 		log.Println("Ошибка получения activity_id")
+// 		return "", err
+// 	}
 
-	// activity_id = "8435151828"
-	log.Println(strava_api_url + "/activities/" + activity_id)
-	req, err := http.NewRequest("GET", strava_api_url+"activities/"+activity_id, nil)
-	if err != nil {
-		log.Println("Ошибка создания req")
-		return "", err
-	}
-	token, err := s.rep.GetAccesToken(id)
-	if err != nil {
-		log.Println("Ошибка получения токена")
-		return "", err
-	}
-	bearer := "Bearer " + token
-	req.Header.Add("Authorization", bearer)
+// 	// activity_id = "8435151828"
+// 	log.Println(strava_api_url + "/activities/" + activity_id)
+// 	req, err := http.NewRequest("GET", strava_api_url+"activities/"+activity_id, nil)
+// 	if err != nil {
+// 		log.Println("Ошибка создания req")
+// 		return "", err
+// 	}
+// 	token, err := s.rep.GetAccesToken(id)
+// 	if err != nil {
+// 		log.Println("Ошибка получения токена")
+// 		return "", err
+// 	}
+// 	bearer := "Bearer " + token
+// 	req.Header.Add("Authorization", bearer)
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Println("Ошибка выполнения req")
-		return "", err
-	} else {
-		body := &bytes.Buffer{}
-		_, err := body.ReadFrom(resp.Body)
-		if err != nil {
-			log.Fatal(err)
-		}
-		resp.Body.Close()
-		log.Println(resp.StatusCode)
-		log.Println(resp.Header)
-		log.Println(body)
-	}
-	defer resp.Body.Close()
+// 	client := &http.Client{}
+// 	resp, err := client.Do(req)
+// 	if err != nil {
+// 		log.Println("Ошибка выполнения req")
+// 		return "", err
+// 	} else {
+// 		body := &bytes.Buffer{}
+// 		_, err := body.ReadFrom(resp.Body)
+// 		if err != nil {
+// 			log.Fatal(err)
+// 		}
+// 		resp.Body.Close()
+// 		log.Println(resp.StatusCode)
+// 		log.Println(resp.Header)
+// 		log.Println(body)
+// 	}
+// 	defer resp.Body.Close()
 
-	// body, _ := io.ReadAll(resp.Body)
-	// log.Println(resp.StatusCode)
-	// log.Println(body)
+// 	// body, _ := io.ReadAll(resp.Body)
+// 	// log.Println(resp.StatusCode)
+// 	// log.Println(body)
 
-	return "", nil
+// 	return "", nil
 
-}
+// }
