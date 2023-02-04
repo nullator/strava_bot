@@ -33,17 +33,17 @@ func (b *Bot) handleCommand(message *tgbotapi.Message) error {
 			return err
 		}
 
-	case commandGet:
-		err := b.handleGetComand(message)
-		if err != nil {
-			return err
-		}
+		// case commandGet:
+		// 	err := b.handleGetComand(message)
+		// 	if err != nil {
+		// 		return err
+		// 	}
 
-	case commandSettings:
-		err := b.handleSettingsComand(message)
-		if err != nil {
-			return err
-		}
+		// case commandSettings:
+		// 	err := b.handleSettingsComand(message)
+		// 	if err != nil {
+		// 		return err
+		// 	}
 
 	}
 
@@ -67,9 +67,9 @@ func (b *Bot) handleStartComand(message *tgbotapi.Message) error {
 	return nil
 }
 
-func (b *Bot) handleGetComand(message *tgbotapi.Message) error {
-	id := message.Chat.ID
-	err := b.service.Strava.RefreshToken(id)
-	return err
+// func (b *Bot) handleGetComand(message *tgbotapi.Message) error {
+// 	id := message.Chat.ID
+// 	err := b.service.Strava.RefreshToken(id)
+// 	return err
 
-}
+// }
