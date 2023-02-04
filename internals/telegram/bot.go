@@ -53,10 +53,15 @@ func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 				} else {
 					// upload file to strava
 					err = b.service.UploadActivity(filename, id)
+					var msg_txt string
 					if err != nil {
 						log.Println(err.Error())
+						msg_txt = "Произошла ошибка загрузки файла на сервер Strava.\n" +
+							"Проверьте корректность файла (поддерживаются файлы .fit, .tcx и .gpx)" +
+							" и попробуйте повторить загрузку позже."
+					} else {
+						msg_txt = "Файл тренировки успешно обработан и загружен в Strava"
 					}
-					msg_txt := "Файл тренировки успешно обработан и загружен в Strava"
 					msg := tgbotapi.NewMessage(id, msg_txt)
 					msg.ParseMode = "Markdown"
 					_, err = b.bot.Send(msg)
