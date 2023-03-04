@@ -69,12 +69,6 @@ func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 						log.Println(err.Error())
 					}
 
-					// get link to activity
-					// _, err = b.service.Strava.GetActivity(id)
-					// if err != nil {
-					// 	log.Println(err.Error())
-					// }
-
 				}
 
 			}

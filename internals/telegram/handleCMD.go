@@ -54,7 +54,6 @@ func (b *Bot) handleStartComand(message *tgbotapi.Message) error {
 	URL := fmt.Sprintf(strava_auth_URL, os.Getenv("STRAVA_CLIENT_ID"),
 		os.Getenv("STRAVA_REDIRECT_URL"), message.Chat.ID)
 
-	// [user mention](tg://user?id=12345)
 	msg_text := fmt.Sprintf("Для авторизации перейди по ссылке:\n[https://strava.com/](%s)", URL)
 	msg := tgbotapi.NewMessage(message.Chat.ID, msg_text)
 
@@ -66,10 +65,3 @@ func (b *Bot) handleStartComand(message *tgbotapi.Message) error {
 	log.Println("Выполнена команда Start")
 	return nil
 }
-
-// func (b *Bot) handleGetComand(message *tgbotapi.Message) error {
-// 	id := message.Chat.ID
-// 	err := b.service.Strava.RefreshToken(id)
-// 	return err
-
-// }
