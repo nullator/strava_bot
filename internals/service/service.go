@@ -6,12 +6,10 @@ import (
 )
 
 type Strava interface {
-	//CreateAuthLink(iserID int64) (string, error)
 	Auth(input *models.AuthHandler) (int, *models.StravaUser, error)
 	RefreshToken(id int64) error
 	getNewToken(id int64) error
 	UploadActivity(file string, id int64) error
-	// GetActivity(id int64) (string, error)
 }
 
 type Telegram interface {

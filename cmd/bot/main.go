@@ -45,24 +45,24 @@ func main() {
 	logger := logger.New("strava", l)
 
 	if err := godotenv.Load(); err != nil {
-		log.Fatalf("error loading env: %v", err)
+		logger.Fatalf("error loading env: %v", err)
 	}
 
 	bot, err := tgbotapi.NewBotAPI(os.Getenv("TG_TOKEN"))
 	if err != nil {
-		log.Fatalln(err)
+		logger.Fatal(err)
 	}
 
 	bot.Debug = false
 
 	db, err := bolt.Open(os.Getenv("DB_FILE"), 0600, nil)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	defer func() {
 		err := db.Close()
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 	}()
 	base := boltdb.NewBase(db)
@@ -75,7 +75,7 @@ func main() {
 	go func() {
 		err := srv.Run(os.Getenv("SERVER_PORT"), handlers.InitRouters())
 		if err != nil {
-			log.Fatalf("error running server: %v", err)
+			logger.Fatalf("error running server: %v", err)
 		}
 	}()
 
@@ -87,12 +87,12 @@ func main() {
 
 	err = srv.Stop(context.Background())
 	if err != nil {
-		log.Fatalf("error stopping server: %v", err)
+		logger.Fatalf("error stopping server: %v", err)
 	}
 
 	err = db.Close()
 	if err != nil {
-		log.Fatalf("error closing db: %v", err)
+		logger.Fatalf("error closing db: %v", err)
 	}
 
 }
