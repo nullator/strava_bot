@@ -14,6 +14,7 @@ import (
 	"strava_bot/internals/service"
 	"strava_bot/internals/telegram"
 	boltdb "strava_bot/pkg/base/boltdb"
+	"strava_bot/pkg/logger"
 
 	"github.com/boltdb/bolt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -37,8 +38,11 @@ func main() {
 		}
 	}()
 
+	l := log.Default()
 	wrt := io.MultiWriter(os.Stdout, f)
 	log.SetOutput(wrt)
+	l.SetOutput(wrt)
+	logger := logger.New("strava", l)
 
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("error loading env: %v", err)
@@ -66,7 +70,7 @@ func main() {
 	rep := repository.NewRepository(base)
 	service := service.NewService(rep)
 	tg_bot := telegram.NewBot(bot, service)
-	handlers := handler.NewHandler(service, tg_bot)
+	handlers := handler.NewHandler(service, tg_bot, logger)
 	srv := new(models.Server)
 	go func() {
 		err := srv.Run(os.Getenv("SERVER_PORT"), handlers.InitRouters())

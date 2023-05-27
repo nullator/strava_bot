@@ -104,9 +104,10 @@ func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 	}
 }
 
+// TODO: прикреплять картинку с примером шаринга файла
 func (b *Bot) SuccsesAuth(id int64, username string) {
 	msg_txt := fmt.Sprintf("Успешная авторизация в аккаунт *%s*\n"+
-		"Для загрузки тренировки направь боту файл в формате .fit, .tcx или .gpx\nVPN не требуется", username)
+		"Для загрузки тренировки отправляй боту файлы в формате .fit, .tcx или .gpx\nVPN не требуется", username)
 	msg := tgbotapi.NewMessage(id, msg_txt)
 	msg.ParseMode = "Markdown"
 	_, err := b.bot.Send(msg)
