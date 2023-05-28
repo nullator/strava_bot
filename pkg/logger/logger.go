@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"fmt"
 	"log"
 )
 
@@ -28,57 +29,49 @@ func New(name string, l *log.Logger) *Logger {
 }
 
 func (l *Logger) Info(args ...interface{}) {
-	a := make([]interface{}, 0)
-	a = append(a, "INFO - ")
-	a = append(a, args...)
-	l.logger.Print(a...)
+	output := "INFO - "
+	output += fmt.Sprint(args...)
+	l.logger.Print(output)
 }
 
 func (l *Logger) Infof(format string, args ...interface{}) {
-	a := make([]interface{}, 0)
-	a = append(a, "INFO - ")
-	a = append(a, args...)
-	l.logger.Printf(format, a...)
+	output := "INFO - "
+	output += fmt.Sprintf(format, args...)
+	l.logger.Print(output)
 }
 
 func (l *Logger) Warn(args ...interface{}) {
-	a := make([]interface{}, 0)
-	a = append(a, "WARNING - ")
-	a = append(a, args...)
-	l.logger.Print(a...)
+	output := "WARNING - "
+	output += fmt.Sprint(args...)
+	l.logger.Print(output)
 }
 
 func (l *Logger) Warnf(format string, args ...interface{}) {
-	a := make([]interface{}, 0)
-	a = append(a, "WARNING - ")
-	a = append(a, args...)
-	l.logger.Printf(format, a...)
+	output := "WARNING - "
+	output += fmt.Sprintf(format, args...)
+	l.logger.Print(output)
 }
 
 func (l *Logger) Error(args ...interface{}) {
-	a := make([]interface{}, 0)
-	a = append(a, "ERROR - ")
-	a = append(a, args...)
-	l.logger.Print(a...)
+	output := "ERROR - "
+	output += fmt.Sprint(args...)
+	l.logger.Print(output)
 }
 
 func (l *Logger) Errorf(format string, args ...interface{}) {
-	a := make([]interface{}, 0)
-	a = append(a, "ERROR - ")
-	a = append(a, args...)
-	l.logger.Printf(format, a...)
+	output := "ERROR - "
+	output += fmt.Sprintf(format, args...)
+	l.logger.Print(output)
 }
 
 func (l *Logger) Fatal(args ...interface{}) {
-	a := make([]interface{}, 0)
-	a = append(a, "FATAL ERROR - ")
-	a = append(a, args...)
-	l.logger.Fatal(a...)
+	output := "FATAL ERROR - "
+	output += fmt.Sprint(args...)
+	l.logger.Print(output)
 }
 
 func (l *Logger) Fatalf(format string, args ...interface{}) {
-	a := make([]interface{}, 0)
-	a = append(a, "FATAL ERROR - ")
-	a = append(a, args...)
-	l.logger.Fatalf(format, a...)
+	output := "FATAL ERROR - "
+	output += fmt.Sprintf(format, args...)
+	l.logger.Print(output)
 }
