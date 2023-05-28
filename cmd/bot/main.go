@@ -68,9 +68,9 @@ func main() {
 	base := boltdb.NewBase(db)
 
 	rep := repository.NewRepository(base)
-	service := service.NewService(rep)
+	service := service.NewService(rep, logger)
 	tg_bot := telegram.NewBot(bot, service)
-	handlers := handler.NewHandler(service, tg_bot, logger)
+	handlers := handler.NewHandler(service, tg_bot)
 	srv := new(models.Server)
 	go func() {
 		err := srv.Run(os.Getenv("SERVER_PORT"), handlers.InitRouters())

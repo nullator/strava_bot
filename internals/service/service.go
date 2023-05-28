@@ -3,6 +3,7 @@ package service
 import (
 	"strava_bot/internals/models"
 	"strava_bot/internals/repository"
+	"strava_bot/pkg/logger"
 )
 
 type Strava interface {
@@ -19,11 +20,13 @@ type Telegram interface {
 type Service struct {
 	Strava
 	Telegram
+	Logger *logger.Logger
 }
 
-func NewService(rep *repository.Repository) *Service {
+func NewService(rep *repository.Repository, logger *logger.Logger) *Service {
 	return &Service{
-		Strava:   NewStravaService(rep),
+		Strava:   NewStravaService(rep, logger),
 		Telegram: NewTelegramService(),
+		Logger:   logger,
 	}
 }
