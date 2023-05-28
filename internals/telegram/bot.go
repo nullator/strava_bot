@@ -2,7 +2,6 @@ package telegram
 
 import (
 	"fmt"
-	"log"
 	"strava_bot/internals/service"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -28,6 +27,9 @@ func (b *Bot) Start() {
 func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 	for update := range updates {
 		if update.Message != nil {
+			b.service.Logger.Infof("[%s (%s)] ввёл сообщение %s",
+				update.Message.From.UserName, update.Message.From.String(), update.Message.Text)
+
 			if update.Message.IsCommand() {
 				b.service.Logger.Infof("[%s (%s)] ввёл команду %s",
 					update.Message.From.UserName, update.Message.From.String(), update.Message.Text)
@@ -69,38 +71,8 @@ func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 					if err != nil {
 						b.service.Logger.Errorf("error send message to user: %v\n", err)
 					}
-
 				}
-
 			}
-
-		} else if update.CallbackQuery != nil {
-			q := update.CallbackQuery.Data
-			switch q {
-			case "use_def":
-				log.Println("def")
-				buttons := make([][]tgbotapi.InlineKeyboardButton, 0)
-				msg := tgbotapi.NewEditMessageReplyMarkup(update.CallbackQuery.Message.Chat.ID,
-					update.CallbackQuery.Message.MessageID,
-					tgbotapi.InlineKeyboardMarkup{InlineKeyboard: buttons})
-				_, err := b.bot.Send(msg)
-				if err != nil {
-					log.Println(err)
-				}
-
-			case "use_var":
-				log.Println("var")
-				buttons := make([][]tgbotapi.InlineKeyboardButton, 0)
-				msg := tgbotapi.NewEditMessageReplyMarkup(update.CallbackQuery.Message.Chat.ID,
-					update.CallbackQuery.Message.MessageID,
-					tgbotapi.InlineKeyboardMarkup{InlineKeyboard: buttons})
-				_, err := b.bot.Send(msg)
-				if err != nil {
-					log.Println(err)
-				}
-
-			}
-
 		}
 	}
 }
