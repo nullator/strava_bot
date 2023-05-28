@@ -2,7 +2,6 @@ package telegram
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
@@ -32,19 +31,6 @@ func (b *Bot) handleCommand(message *tgbotapi.Message) error {
 		if err != nil {
 			return err
 		}
-
-		// case commandGet:
-		// 	err := b.handleGetComand(message)
-		// 	if err != nil {
-		// 		return err
-		// 	}
-
-		// case commandSettings:
-		// 	err := b.handleSettingsComand(message)
-		// 	if err != nil {
-		// 		return err
-		// 	}
-
 	}
 
 	return nil
@@ -60,8 +46,10 @@ func (b *Bot) handleStartComand(message *tgbotapi.Message) error {
 	msg.ParseMode = "Markdown"
 	_, err := b.bot.Send(msg)
 	if err != nil {
+		b.service.Logger.Errorf("error send message to user: %v\n", err)
 		return err
 	}
-	log.Println("Выполнена команда Start")
+	b.service.Logger.Infof("Пользователю [%s (%s)] отправлены ссылка для авторизации\n",
+		message.From.UserName, message.From.String())
 	return nil
 }

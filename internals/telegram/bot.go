@@ -18,7 +18,7 @@ func NewBot(bot *tgbotapi.BotAPI, service *service.Service) *Bot {
 }
 
 func (b *Bot) Start() {
-	log.Printf("Authorized on account %s\n", b.bot.Self.UserName)
+	b.service.Logger.Infof("Authorized on account %s\n", b.bot.Self.UserName)
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 	updates := b.bot.GetUpdatesChan(u)
@@ -29,10 +29,10 @@ func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 	for update := range updates {
 		if update.Message != nil {
 			if update.Message.IsCommand() {
-				log.Printf("[%s] ввёл команду %s",
-					update.Message.From.UserName, update.Message.Text)
+				b.service.Logger.Infof("[%s (%s)] ввёл команду %s",
+					update.Message.From.UserName, update.Message.From.String(), update.Message.Text)
 				if err := b.handleCommand(update.Message); err != nil {
-					log.Printf("При обработке команды %s произошла ошибка %s",
+					b.service.Logger.Errorf("При обработке команды %s произошла ошибка %s",
 						update.Message.Command(), err)
 				}
 				continue
@@ -40,22 +40,23 @@ func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 
 			d := update.Message.Document
 			id := update.Message.From.ID
+			// if get file (d) from user
 			if d != nil {
 				filename, err := b.douwnloadFile(d)
 				if err != nil {
-					log.Println(err.Error())
+					b.service.Logger.Errorf("error download file: %v\n", err)
 					msg := tgbotapi.NewMessage(id, "Не удалось обработать файл")
 					msg.ParseMode = "Markdown"
 					_, err := b.bot.Send(msg)
 					if err != nil {
-						log.Println(err.Error())
+						b.service.Logger.Errorf("error send message to user: %v\n", err)
 					}
 				} else {
 					// upload file to strava
 					err = b.service.UploadActivity(filename, id)
 					var msg_txt string
 					if err != nil {
-						log.Println(err.Error())
+						b.service.Logger.Errorf("error upload file to Strava server: %v\n", err)
 						msg_txt = "Произошла ошибка загрузки файла на сервер Strava.\n" +
 							"Проверьте корректность файла (поддерживаются файлы .fit, .tcx и .gpx)" +
 							" и попробуйте повторить загрузку позже."
@@ -66,7 +67,7 @@ func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 					msg.ParseMode = "Markdown"
 					_, err = b.bot.Send(msg)
 					if err != nil {
-						log.Println(err.Error())
+						b.service.Logger.Errorf("error send message to user: %v\n", err)
 					}
 
 				}
@@ -112,7 +113,7 @@ func (b *Bot) SuccsesAuth(id int64, username string) {
 	msg.ParseMode = "Markdown"
 	_, err := b.bot.Send(msg)
 	if err != nil {
-		log.Println(err.Error())
+		b.service.Logger.Errorf("error send message to user: %v\n", err)
 	}
 
 }

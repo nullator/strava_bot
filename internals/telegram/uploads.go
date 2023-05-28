@@ -2,7 +2,6 @@ package telegram
 
 import (
 	"fmt"
-	"log"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -10,10 +9,8 @@ import (
 func (b *Bot) douwnloadFile(document *tgbotapi.Document) (string, error) {
 	// check file type
 	file_name := document.FileName
-	log.Println(file_name)
+	b.service.Logger.Infof("get file from user: %v\n", file_name)
 	l := len([]rune(file_name))
-	log.Println(string([]rune(file_name)))
-	log.Println(l)
 	file_format := string([]rune(file_name)[l-4 : l])
 	if file_format != ".fit" && file_format != ".tcx" && file_format != ".gpx" {
 		return "", fmt.Errorf("incorrect file format (%s)", file_format)
