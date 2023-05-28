@@ -26,7 +26,7 @@ type Service struct {
 func NewService(rep *repository.Repository, logger *logger.Logger) *Service {
 	return &Service{
 		Strava:   NewStravaService(rep, logger),
-		Telegram: NewTelegramService(),
+		Telegram: NewTelegramService(logger),
 		Logger:   logger,
 	}
 }
