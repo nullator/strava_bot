@@ -3,7 +3,6 @@ package repository
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strava_bot/internals/models"
 	"strava_bot/pkg/base"
@@ -59,7 +58,6 @@ func (r *Repository) RefreshToken(id int64, input models.RespondRefreshToken) er
 	if err != nil {
 		return err
 	}
-	log.Printf("acess token %s\n", input.Access_token)
 
 	err = r.db.Save("expies_at", expires, tg_id)
 	if err != nil {
@@ -70,7 +68,6 @@ func (r *Repository) RefreshToken(id int64, input models.RespondRefreshToken) er
 	if err != nil {
 		return err
 	}
-	log.Printf("new refresh token %s\n", input.Refresh_token)
 
 	return nil
 }
@@ -85,7 +82,6 @@ func (r *Repository) GetRefreshToken(id int64) (string, error) {
 	if rt == "" {
 		return "", errors.New("no refresh token in DB")
 	}
-	log.Printf("refresh token %s\n", rt)
 
 	return rt, nil
 
