@@ -1,8 +1,13 @@
 package logger
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
+	"net/http"
+	"os"
 )
 
 type LoggerInterface interface {
@@ -29,49 +34,108 @@ func New(name string, l *log.Logger) *Logger {
 }
 
 func (l *Logger) Info(args ...interface{}) {
-	output := "INFO - "
-	output += fmt.Sprint(args...)
+	output := fmt.Sprint(args...)
 	l.logger.Print(output)
+	err := sendLogToServer(output, "0", "info")
+	if err != nil {
+		l.logger.Printf("ERROR SEND TO LOG SERVER: %s\n", err)
+	}
 }
 
 func (l *Logger) Infof(format string, args ...interface{}) {
-	output := "INFO - "
-	output += fmt.Sprintf(format, args...)
+	output := fmt.Sprintf(format, args...)
 	l.logger.Print(output)
+	err := sendLogToServer(output, "0", "info")
+	if err != nil {
+		l.logger.Printf("ERROR SEND TO LOG SERVER: %s\n", err)
+	}
 }
 
 func (l *Logger) Warn(args ...interface{}) {
-	output := "WARNING - "
-	output += fmt.Sprint(args...)
+	output := fmt.Sprint(args...)
 	l.logger.Print(output)
+	err := sendLogToServer(output, "0", "warning")
+	if err != nil {
+		l.logger.Printf("ERROR SEND TO LOG SERVER: %s\n", err)
+	}
 }
 
 func (l *Logger) Warnf(format string, args ...interface{}) {
-	output := "WARNING - "
-	output += fmt.Sprintf(format, args...)
+	output := fmt.Sprintf(format, args...)
 	l.logger.Print(output)
+	err := sendLogToServer(output, "0", "warning")
+	if err != nil {
+		l.logger.Printf("ERROR SEND TO LOG SERVER: %s\n", err)
+	}
 }
 
 func (l *Logger) Error(args ...interface{}) {
-	output := "ERROR - "
-	output += fmt.Sprint(args...)
+	output := fmt.Sprint(args...)
 	l.logger.Print(output)
+	err := sendLogToServer(output, "0", "error")
+	if err != nil {
+		l.logger.Printf("ERROR SEND TO LOG SERVER: %s\n", err)
+	}
 }
 
 func (l *Logger) Errorf(format string, args ...interface{}) {
-	output := "ERROR - "
-	output += fmt.Sprintf(format, args...)
+	output := fmt.Sprintf(format, args...)
 	l.logger.Print(output)
+	err := sendLogToServer(output, "0", "error")
+	if err != nil {
+		l.logger.Printf("ERROR SEND TO LOG SERVER: %s\n", err)
+	}
 }
 
 func (l *Logger) Fatal(args ...interface{}) {
-	output := "FATAL ERROR - "
-	output += fmt.Sprint(args...)
+	output := fmt.Sprint(args...)
 	l.logger.Print(output)
+	err := sendLogToServer(output, "0", "fatal")
+	if err != nil {
+		l.logger.Printf("ERROR SEND TO LOG SERVER: %s\n", err)
+	}
 }
 
 func (l *Logger) Fatalf(format string, args ...interface{}) {
-	output := "FATAL ERROR - "
-	output += fmt.Sprintf(format, args...)
+	output := fmt.Sprintf(format, args...)
 	l.logger.Print(output)
+	err := sendLogToServer(output, "0", "fatal")
+	if err != nil {
+		l.logger.Printf("ERROR SEND TO LOG SERVER: %s\n", err)
+	}
+}
+
+func sendLogToServer(message string, code string, level string) error {
+	request := map[string]string{
+		"app":     os.Getenv("APP_NAME"),
+		"message": message,
+		"level":   level,
+	}
+
+	fmt.Println(request)
+
+	json_request, err := json.Marshal(request)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("POST", os.Getenv("LOGGER_SERVER"), bytes.NewBuffer(json_request))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", os.Getenv("LOGGER_AUTH"))
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return errors.New(resp.Status)
+	}
+
+	return nil
 }
