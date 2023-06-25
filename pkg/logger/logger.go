@@ -26,7 +26,6 @@ type LoggerInterface interface {
 type Log struct {
 	App     string    `json:"app"`
 	Message string    `json:"message"`
-	Code    int       `json:"code"`
 	Level   string    `json:"level"`
 	Time    time.Time `json:"time"`
 }
@@ -118,7 +117,6 @@ func sendLogToServer(message string, code string, level string) error {
 	request := Log{
 		App:     os.Getenv("APP_NAME"),
 		Message: message,
-		Code:    0,
 		Level:   level,
 		Time:    time.Now().UTC(),
 	}
