@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 type LoggerInterface interface {
@@ -20,6 +21,14 @@ type LoggerInterface interface {
 	Warnf(format string, args ...interface{})
 	Errorf(format string, args ...interface{})
 	Fatalf(format string, args ...interface{})
+}
+
+type Log struct {
+	App     string    `json:"app"`
+	Message string    `json:"message"`
+	Code    int       `json:"code"`
+	Level   string    `json:"level"`
+	Time    time.Time `json:"time"`
 }
 
 type Logger struct {
@@ -106,10 +115,12 @@ func (l *Logger) Fatalf(format string, args ...interface{}) {
 }
 
 func sendLogToServer(message string, code string, level string) error {
-	request := map[string]string{
-		"app":     os.Getenv("APP_NAME"),
-		"message": message,
-		"level":   level,
+	request := Log{
+		App:     os.Getenv("APP_NAME"),
+		Message: message,
+		Code:    0,
+		Level:   level,
+		Time:    time.Now().UTC(),
 	}
 
 	fmt.Println(request)
