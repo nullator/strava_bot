@@ -46,10 +46,10 @@ func (b *Bot) handleStartComand(message *tgbotapi.Message) error {
 	msg.ParseMode = "Markdown"
 	_, err := b.bot.Send(msg)
 	if err != nil {
-		b.service.Logger.Errorf("error send message to user: %v\n", err)
+		b.service.Logger.Errorf("error send message to user: %v", err)
 		return err
 	}
-	b.service.Logger.Infof("Пользователю [%s (%s)] отправлены ссылка для авторизации\n",
+	b.service.Logger.Infof("Пользователю [%s (%s)] отправлены ссылка для авторизации",
 		message.From.UserName, message.From.String())
 	return nil
 }

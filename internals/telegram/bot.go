@@ -17,7 +17,7 @@ func NewBot(bot *tgbotapi.BotAPI, service *service.Service) *Bot {
 }
 
 func (b *Bot) Start() {
-	b.service.Logger.Infof("Authorized on account %s\n", b.bot.Self.UserName)
+	b.service.Logger.Infof("Authorized on account %s", b.bot.Self.UserName)
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 	updates := b.bot.GetUpdatesChan(u)
@@ -46,19 +46,19 @@ func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 			if d != nil {
 				filename, err := b.douwnloadFile(d)
 				if err != nil {
-					b.service.Logger.Errorf("error download file: %v\n", err)
+					b.service.Logger.Errorf("error download file: %v", err)
 					msg := tgbotapi.NewMessage(id, "Не удалось обработать файл")
 					msg.ParseMode = "Markdown"
 					_, err := b.bot.Send(msg)
 					if err != nil {
-						b.service.Logger.Errorf("error send message to user: %v\n", err)
+						b.service.Logger.Errorf("error send message to user: %v", err)
 					}
 				} else {
 					// upload file to strava
 					err = b.service.UploadActivity(filename, id)
 					var msg_txt string
 					if err != nil {
-						b.service.Logger.Errorf("error upload file to Strava server: %v\n", err)
+						b.service.Logger.Errorf("error upload file to Strava server: %v", err)
 						msg_txt = "Произошла ошибка загрузки файла на сервер Strava.\n" +
 							"Проверьте корректность файла (поддерживаются файлы .fit, .tcx и .gpx)" +
 							" и попробуйте повторить загрузку позже."
@@ -69,7 +69,7 @@ func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 					msg.ParseMode = "Markdown"
 					_, err = b.bot.Send(msg)
 					if err != nil {
-						b.service.Logger.Errorf("error send message to user: %v\n", err)
+						b.service.Logger.Errorf("error send message to user: %v", err)
 					}
 				}
 			}
@@ -85,7 +85,7 @@ func (b *Bot) SuccsesAuth(id int64, username string) {
 	msg.ParseMode = "Markdown"
 	_, err := b.bot.Send(msg)
 	if err != nil {
-		b.service.Logger.Errorf("error send message to user: %v\n", err)
+		b.service.Logger.Errorf("error send message to user: %v", err)
 	}
 
 }

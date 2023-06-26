@@ -123,8 +123,6 @@ func sendLogToServer(message string, code int, level string) error {
 		Time:    time.Now().UTC(),
 	}
 
-	fmt.Println(request)
-
 	json_request, err := json.Marshal(request)
 	if err != nil {
 		return err
