@@ -26,6 +26,7 @@ type LoggerInterface interface {
 type Log struct {
 	App     string    `json:"app"`
 	Message string    `json:"message"`
+	Code    int       `json:"code"`
 	Level   string    `json:"level"`
 	Time    time.Time `json:"time"`
 }
@@ -44,7 +45,7 @@ func New(name string, l *log.Logger) *Logger {
 func (l *Logger) Info(args ...interface{}) {
 	output := fmt.Sprint(args...)
 	l.logger.Print(output)
-	err := sendLogToServer(output, "0", "info")
+	err := sendLogToServer(output, 0, "info")
 	if err != nil {
 		l.logger.Printf("ERROR SEND TO LOG SERVER: %s\n", err)
 	}
@@ -53,7 +54,7 @@ func (l *Logger) Info(args ...interface{}) {
 func (l *Logger) Infof(format string, args ...interface{}) {
 	output := fmt.Sprintf(format, args...)
 	l.logger.Print(output)
-	err := sendLogToServer(output, "0", "info")
+	err := sendLogToServer(output, 0, "info")
 	if err != nil {
 		l.logger.Printf("ERROR SEND TO LOG SERVER: %s\n", err)
 	}
@@ -62,7 +63,7 @@ func (l *Logger) Infof(format string, args ...interface{}) {
 func (l *Logger) Warn(args ...interface{}) {
 	output := fmt.Sprint(args...)
 	l.logger.Print(output)
-	err := sendLogToServer(output, "0", "warning")
+	err := sendLogToServer(output, 0, "warning")
 	if err != nil {
 		l.logger.Printf("ERROR SEND TO LOG SERVER: %s\n", err)
 	}
@@ -71,7 +72,7 @@ func (l *Logger) Warn(args ...interface{}) {
 func (l *Logger) Warnf(format string, args ...interface{}) {
 	output := fmt.Sprintf(format, args...)
 	l.logger.Print(output)
-	err := sendLogToServer(output, "0", "warning")
+	err := sendLogToServer(output, 0, "warning")
 	if err != nil {
 		l.logger.Printf("ERROR SEND TO LOG SERVER: %s\n", err)
 	}
@@ -80,7 +81,7 @@ func (l *Logger) Warnf(format string, args ...interface{}) {
 func (l *Logger) Error(args ...interface{}) {
 	output := fmt.Sprint(args...)
 	l.logger.Print(output)
-	err := sendLogToServer(output, "0", "error")
+	err := sendLogToServer(output, 0, "error")
 	if err != nil {
 		l.logger.Printf("ERROR SEND TO LOG SERVER: %s\n", err)
 	}
@@ -89,7 +90,7 @@ func (l *Logger) Error(args ...interface{}) {
 func (l *Logger) Errorf(format string, args ...interface{}) {
 	output := fmt.Sprintf(format, args...)
 	l.logger.Print(output)
-	err := sendLogToServer(output, "0", "error")
+	err := sendLogToServer(output, 0, "error")
 	if err != nil {
 		l.logger.Printf("ERROR SEND TO LOG SERVER: %s\n", err)
 	}
@@ -98,7 +99,7 @@ func (l *Logger) Errorf(format string, args ...interface{}) {
 func (l *Logger) Fatal(args ...interface{}) {
 	output := fmt.Sprint(args...)
 	l.logger.Print(output)
-	err := sendLogToServer(output, "0", "fatal")
+	err := sendLogToServer(output, 0, "fatal")
 	if err != nil {
 		l.logger.Printf("ERROR SEND TO LOG SERVER: %s\n", err)
 	}
@@ -107,16 +108,17 @@ func (l *Logger) Fatal(args ...interface{}) {
 func (l *Logger) Fatalf(format string, args ...interface{}) {
 	output := fmt.Sprintf(format, args...)
 	l.logger.Print(output)
-	err := sendLogToServer(output, "0", "fatal")
+	err := sendLogToServer(output, 0, "fatal")
 	if err != nil {
 		l.logger.Printf("ERROR SEND TO LOG SERVER: %s\n", err)
 	}
 }
 
-func sendLogToServer(message string, code string, level string) error {
+func sendLogToServer(message string, code int, level string) error {
 	request := Log{
 		App:     os.Getenv("APP_NAME"),
 		Message: message,
+		Code:    code,
 		Level:   level,
 		Time:    time.Now().UTC(),
 	}
