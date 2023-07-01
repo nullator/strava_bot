@@ -33,7 +33,7 @@ func (h *Handler) auth(c *gin.Context) {
 	err := c.ShouldBind(&input)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err.Error())
-		h.services.Logger.Errorf("не удалось распарсить полученный запрос в JSON - %s", err.Error())
+		h.services.Logger.Error("не удалось распарсить полученный запрос в JSON - %s", err.Error())
 		return
 	}
 
@@ -47,7 +47,7 @@ func (h *Handler) auth(c *gin.Context) {
 
 	tg_id, err := strconv.ParseInt(input.ID, 10, 64)
 	if err != nil {
-		h.services.Logger.Errorf("при выполнении авторизации не удалось распарсить ID в Telegram id - %s",
+		h.services.Logger.Error("при выполнении авторизации не удалось распарсить ID в Telegram id - %s",
 			err.Error())
 	}
 

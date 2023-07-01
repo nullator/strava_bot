@@ -12,15 +12,10 @@ import (
 )
 
 type LoggerInterface interface {
-	Info(args ...interface{})
-	Warn(args ...interface{})
-	Error(args ...interface{})
-	Fatal(args ...interface{})
-
-	Infof(format string, args ...interface{})
-	Warnf(format string, args ...interface{})
-	Errorf(format string, args ...interface{})
-	Fatalf(format string, args ...interface{})
+	Info(format string, args ...interface{})
+	Warn(format string, args ...interface{})
+	Error(format string, args ...interface{})
+	Fatal(format string, args ...interface{})
 }
 
 type Log struct {
@@ -42,16 +37,7 @@ func New(name string, l *log.Logger) *Logger {
 	return &Logger{name: name, logger: l}
 }
 
-func (l *Logger) Info(args ...interface{}) {
-	output := fmt.Sprint(args...)
-	l.logger.Print(output)
-	err := sendLogToServer(output, 0, "info")
-	if err != nil {
-		l.logger.Printf("ERROR SEND TO LOG SERVER: %s\n", err)
-	}
-}
-
-func (l *Logger) Infof(format string, args ...interface{}) {
+func (l *Logger) Info(format string, args ...interface{}) {
 	output := fmt.Sprintf(format, args...)
 	l.logger.Print(output)
 	err := sendLogToServer(output, 0, "info")
@@ -60,16 +46,7 @@ func (l *Logger) Infof(format string, args ...interface{}) {
 	}
 }
 
-func (l *Logger) Warn(args ...interface{}) {
-	output := fmt.Sprint(args...)
-	l.logger.Print(output)
-	err := sendLogToServer(output, 0, "warning")
-	if err != nil {
-		l.logger.Printf("ERROR SEND TO LOG SERVER: %s\n", err)
-	}
-}
-
-func (l *Logger) Warnf(format string, args ...interface{}) {
+func (l *Logger) Warn(format string, args ...interface{}) {
 	output := fmt.Sprintf(format, args...)
 	l.logger.Print(output)
 	err := sendLogToServer(output, 0, "warning")
@@ -78,16 +55,7 @@ func (l *Logger) Warnf(format string, args ...interface{}) {
 	}
 }
 
-func (l *Logger) Error(args ...interface{}) {
-	output := fmt.Sprint(args...)
-	l.logger.Print(output)
-	err := sendLogToServer(output, 0, "error")
-	if err != nil {
-		l.logger.Printf("ERROR SEND TO LOG SERVER: %s\n", err)
-	}
-}
-
-func (l *Logger) Errorf(format string, args ...interface{}) {
+func (l *Logger) Error(format string, args ...interface{}) {
 	output := fmt.Sprintf(format, args...)
 	l.logger.Print(output)
 	err := sendLogToServer(output, 0, "error")
@@ -96,16 +64,7 @@ func (l *Logger) Errorf(format string, args ...interface{}) {
 	}
 }
 
-func (l *Logger) Fatal(args ...interface{}) {
-	output := fmt.Sprint(args...)
-	l.logger.Print(output)
-	err := sendLogToServer(output, 0, "fatal")
-	if err != nil {
-		l.logger.Printf("ERROR SEND TO LOG SERVER: %s\n", err)
-	}
-}
-
-func (l *Logger) Fatalf(format string, args ...interface{}) {
+func (l *Logger) Fatal(format string, args ...interface{}) {
 	output := fmt.Sprintf(format, args...)
 	l.logger.Print(output)
 	err := sendLogToServer(output, 0, "fatal")
