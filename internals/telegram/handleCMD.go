@@ -49,7 +49,7 @@ func (b *Bot) handleStartComand(message *tgbotapi.Message) error {
 		b.service.Logger.Error("error send message to user: %v", err)
 		return err
 	}
-	b.service.Logger.Info("Пользователю [%s (%s)] отправлены ссылка для авторизации",
+	b.service.Logger.Info("Пользователю [%s (%s)] отправлена ссылка для авторизации",
 		message.From.UserName, message.From.String())
 	return nil
 }
