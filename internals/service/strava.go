@@ -189,7 +189,9 @@ func (s *StravaService) UploadActivity(file string, id int64) error {
 		resp.Body.Close()
 		slog.Info("successful upload activity",
 			slog.Int64("id", res.Id),
+			slog.String("id_str", res.Id_str),
 			slog.Int64("activity_id", res.Activity_id),
+			slog.Any("activity_id_ext", res.External_id),
 			slog.String("status", res.Status),
 		)
 
