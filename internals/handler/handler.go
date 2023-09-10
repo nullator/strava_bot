@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log/slog"
 	"net/http"
 	"strava_bot/internals/models"
 	"strava_bot/internals/service"
@@ -33,13 +34,17 @@ func (h *Handler) auth(c *gin.Context) {
 	err := c.ShouldBind(&input)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err.Error())
-		h.services.Logger.Error("не удалось распарсить полученный запрос в JSON - %s", err.Error())
+		h.services.Logger.Error("не удалось распарсить полученный запрос в JSON",
+			slog.String("input", c.FullPath()),
+			slog.String("error", err.Error()),
+		)
 		return
 	}
 
 	code, strava_user, err := h.services.Auth(input)
 	if err != nil {
 		c.JSON(code, err.Error())
+		h.services.Logger.Error("auth error", slog.String("error", err.Error()))
 		return
 	}
 
@@ -47,8 +52,8 @@ func (h *Handler) auth(c *gin.Context) {
 
 	tg_id, err := strconv.ParseInt(input.ID, 10, 64)
 	if err != nil {
-		h.services.Logger.Error("при выполнении авторизации не удалось распарсить ID в Telegram id - %s",
-			err.Error())
+		h.services.Logger.Error("при выполнении авторизации не удалось распарсить ID в Telegra	m id",
+			slog.String("error", err.Error()))
 	}
 
 	h.bot.SuccsesAuth(tg_id, strava_user.Athlete.Username)

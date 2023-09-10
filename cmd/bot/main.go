@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -22,6 +24,12 @@ import (
 )
 
 func main() {
+	// load environment
+	if err := godotenv.Load(); err != nil {
+		log.Fatalf("error loading env: %v", err)
+	}
+
+	// setup logging
 	err := os.MkdirAll("log", os.ModePerm)
 	if err != nil {
 		log.Fatalln(err)
@@ -40,45 +48,50 @@ func main() {
 
 	l := log.Default()
 	wrt := io.MultiWriter(os.Stdout, f)
-	log.SetOutput(wrt)
 	l.SetOutput(wrt)
-	logger := logger.New("strava", l)
 
-	if err := godotenv.Load(); err != nil {
-		logger.Fatal("error loading env: %v", err)
+	log, err := setupLogger(os.Getenv("ENV"))
+	if err != nil {
+		l.Fatal(err)
 	}
 
+	log.Info("start", slog.String("env", os.Getenv("ENV")))
+	log.Debug("debug level is enabled")
+
+	// creare TG bot
 	bot, err := tgbotapi.NewBotAPI(os.Getenv("TG_TOKEN"))
 	if err != nil {
-		logger.Fatal(err.Error())
+		l.Fatal(err.Error())
 	}
-
 	bot.Debug = false
 
+	// open DB
 	db, err := bolt.Open(os.Getenv("DB_FILE"), 0600, nil)
 	if err != nil {
-		logger.Fatal(err.Error())
+		l.Fatal(err.Error())
 	}
 	defer func() {
 		err := db.Close()
 		if err != nil {
-			logger.Fatal(err.Error())
+			l.Fatal(err.Error())
 		}
 	}()
 	base := boltdb.NewBase(db)
 
+	// init
 	rep := repository.NewRepository(base)
-	service := service.NewService(rep, logger)
+	service := service.NewService(rep, log)
 	tg_bot := telegram.NewBot(bot, service)
 	handlers := handler.NewHandler(service, tg_bot)
 	srv := new(models.Server)
 	go func() {
 		err := srv.Run(os.Getenv("SERVER_PORT"), handlers.InitRouters())
 		if err != nil {
-			logger.Fatal("error running server: %v", err)
+			l.Fatalf("error running server: %v", err)
 		}
 	}()
 
+	// run bot
 	tg_bot.Start()
 
 	quit := make(chan os.Signal, 1)
@@ -87,12 +100,37 @@ func main() {
 
 	err = srv.Stop(context.Background())
 	if err != nil {
-		logger.Fatal("error stopping server: %v", err)
+		l.Fatalf("error stopping server: %v", err)
 	}
 
 	err = db.Close()
 	if err != nil {
-		logger.Fatal("error closing db: %v", err)
+		l.Fatalf("error closing db: %v", err)
 	}
 
+}
+
+func setupLogger(env string) (*slog.Logger, error) {
+	var log *slog.Logger
+
+	switch env {
+	case "local":
+		h := logger.NewCustomSlogHandler(slog.NewJSONHandler(
+			os.Stdout, &slog.HandlerOptions{
+				Level:     slog.LevelDebug,
+				AddSource: false,
+			}))
+		log = slog.New(h)
+	case "prod":
+		h := logger.NewCustomSlogHandler(slog.NewJSONHandler(
+			os.Stdout, &slog.HandlerOptions{
+				Level:     slog.LevelInfo,
+				AddSource: false,
+			}))
+		log = slog.New(h)
+	default:
+		return nil, fmt.Errorf("incorrect error level: %s", env)
+	}
+
+	return log, nil
 }

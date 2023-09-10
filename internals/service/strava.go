@@ -3,15 +3,15 @@ package service
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io"
+	"log/slog"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strava_bot/internals/models"
 	"strava_bot/internals/repository"
-	"strava_bot/pkg/logger"
 	"strconv"
 	"time"
 )
@@ -23,14 +23,16 @@ const (
 
 type StravaService struct {
 	rep    *repository.Repository
-	logger *logger.Logger
+	logger *slog.Logger
 }
 
-func NewStravaService(rep *repository.Repository, logger *logger.Logger) *StravaService {
-	return &StravaService{rep: rep, logger: logger}
+func NewStravaService(rep *repository.Repository, log *slog.Logger) *StravaService {
+	return &StravaService{rep: rep, logger: log}
 }
 
 func (s *StravaService) Auth(input *models.AuthHandler) (int, *models.StravaUser, error) {
+	const path = "internal.service.strava.Auth"
+
 	// validate auth
 	code, err := validateAuthModel(input)
 	if err != nil {
@@ -48,28 +50,32 @@ func (s *StravaService) Auth(input *models.AuthHandler) (int, *models.StravaUser
 
 	json_request, err := json.Marshal(request)
 	if err != nil {
-		s.logger.Error("error generate json to make strava auth: %v", err)
-		return http.StatusInternalServerError, nil, err
+		s.logger.Error("error generate json to make strava auth",
+			slog.String("error", err.Error()))
+		return http.StatusInternalServerError, nil, fmt.Errorf("%s: %w", path, err)
 	}
 
 	req, err := http.NewRequest("POST", strava_auth_url, bytes.NewBuffer(json_request))
 	if err != nil {
-		s.logger.Error("error POST request strava auth: %v", err)
-		return http.StatusInternalServerError, nil, err
+		s.logger.Error("error POST request strava auth",
+			slog.String("error", err.Error()))
+		return http.StatusInternalServerError, nil, fmt.Errorf("%s: %w", path, err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		s.logger.Error("error make request strava auth: %v", err)
-		return http.StatusInternalServerError, nil, err
+		s.logger.Error("error make request strava auth",
+			slog.String("error", err.Error()))
+		return http.StatusInternalServerError, nil, fmt.Errorf("%s: %w", path, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		s.logger.Error("autorization error: %v", err)
-		return http.StatusInternalServerError, nil, errors.New("autorization error")
+		s.logger.Error("autorization error (resp.StatusCode != 200)",
+			slog.Int("get code", resp.StatusCode))
+		return http.StatusInternalServerError, nil, fmt.Errorf("%s: auth error", path)
 	}
 
 	// get Athlete model
@@ -77,22 +83,36 @@ func (s *StravaService) Auth(input *models.AuthHandler) (int, *models.StravaUser
 	var res models.StravaUser
 	err = json.Unmarshal(body, &res)
 	if err != nil && err != io.EOF {
-		s.logger.Error("error unmarshal athlete model: %v", err)
-		return http.StatusInternalServerError, nil, err
+		s.logger.Error("error unmarshal athlete model",
+			slog.String("error", err.Error()))
+		return http.StatusInternalServerError, nil, fmt.Errorf("%s: %w", path, err)
 	}
 
 	// write data to repository
-	s.logger.Info("successful receipt of authorization data, writing data to the database "+
-		"(strava_id=%d, strava_name=%s, scope=%s)",
-		res.Athlete.Id, res.Athlete.Username, input.Scope)
-	return s.rep.Auth(input, &res)
+	s.logger.Info("successful receipt of authorization data,"+
+		" ready to writing data to the database",
+		slog.Int64("strava_id", res.Athlete.Id),
+		slog.String("strava_name", res.Athlete.Username),
+		slog.String("scope", input.Scope),
+		slog.String("strava_city", res.Athlete.City),
+	)
+	code, user, err := s.rep.Auth(input, &res)
+	if err != nil {
+		return code, nil, fmt.Errorf("%s: %w", path, err)
+	}
+	return code, user, nil
 }
 
 func (s *StravaService) UploadActivity(file string, id int64) error {
+	const path = "internal.service.strava.UploadActivity"
+
 	data, err := os.Open(file)
 	if err != nil {
-		s.logger.Error("error opening file %s: %v", file, err)
-		return err
+		s.logger.Error("error opening file",
+			slog.String("file", file),
+			slog.String("error", err.Error()),
+		)
+		return fmt.Errorf("%s: %w", path, err)
 	}
 	defer data.Close()
 
@@ -100,45 +120,48 @@ func (s *StravaService) UploadActivity(file string, id int64) error {
 	writer := multipart.NewWriter(body)
 	part, err := writer.CreateFormFile("file", filepath.Base(file))
 	if err != nil {
-		s.logger.Error("error create part: %v", err)
-		return err
+		s.logger.Error("error create part", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", path, err)
 	}
 	_, err = io.Copy(part, data)
 	if err != nil {
-		s.logger.Error("error copy file to part: %v", err)
-		return err
+		s.logger.Error("error copy file to part", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", path, err)
 	}
 
 	l := len(file)
 	file_format := string([]rune(file)[l-3 : l])
 	err = writer.WriteField("data_type", file_format)
 	if err != nil {
-		s.logger.Error("error add 'data_type' field: %v", err)
-		return err
+		s.logger.Error("error add 'data_type' field",
+			slog.String("data_type", file_format),
+			slog.String("error", err.Error()),
+		)
+		return fmt.Errorf("%s: %w", path, err)
 	}
 	err = writer.Close()
 	if err != nil {
-		s.logger.Error("error close writer: %v", err)
-		return err
+		s.logger.Error("error close writer", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", path, err)
 	}
 
 	req, err := http.NewRequest("POST", strava_api_url+"uploads", body)
 	if err != nil {
-		s.logger.Error("error create upload request: %v", err)
-		return err
+		s.logger.Error("error create upload request", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", path, err)
 	}
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
 	err = s.RefreshToken(id)
 	if err != nil {
-		s.logger.Error("error refresh token: %v", err)
-		return err
+		s.logger.Error("error refresh token", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", path, err)
 	}
 
 	token, err := s.rep.GetAccesToken(id)
 	if err != nil {
-		s.logger.Error("error get acces token from DB: %v", err)
-		return err
+		s.logger.Error("error get acces token from DB", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", path, err)
 	}
 	bearer := "Bearer " + token
 	req.Header.Add("Authorization", bearer)
@@ -146,38 +169,51 @@ func (s *StravaService) UploadActivity(file string, id int64) error {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		s.logger.Error("error do request (upload file to strava): %v", err)
-		return err
+		s.logger.Error("error do request (upload file to strava)",
+			slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", path, err)
 	} else {
 		if resp.StatusCode != 201 {
-			return errors.New("incorrect upload activity file")
+			s.logger.Error("error do request (resp.Code != 201)",
+				slog.Int("get code", resp.StatusCode))
+			return fmt.Errorf("%s: incorrect upload activity file", path)
 		}
 
 		body, _ := io.ReadAll(resp.Body)
 		var res models.RespondUploadActivity
 		err = json.Unmarshal(body, &res)
 		if err != nil && err != io.EOF {
-			s.logger.Error("error response processing aftet upload file to strava: %v", err)
-			return err
+			s.logger.Error("error response processing aftet upload file to strava",
+				slog.String("error", err.Error()))
+			return fmt.Errorf("%s: %w", path, err)
 		}
 		resp.Body.Close()
-		s.logger.Info("successful upload activity (id: %d, activity_id: %d, status: %s)",
-			res.Id, res.Activity_id, res.Status)
+		s.logger.Info("successful upload activity",
+			slog.Int64("id", res.Id),
+			slog.Int64("activity_id", res.Activity_id),
+			slog.String("status", res.Status),
+		)
 
-		return s.rep.SaveActivityId(id, res.Id_str)
+		err = s.rep.SaveActivityId(id, res.Id_str)
+		if err != nil {
+			return fmt.Errorf("%s: %w", path, err)
+		}
+
+		return nil
 	}
 }
 
 func (s *StravaService) RefreshToken(id int64) error {
+	const path = "internal.service.strava.RefreshToken"
 
 	et, err := s.rep.GetExpies(id)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", path, err)
 	}
 
 	delta, err := checkRefreshToken(et)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", path, err)
 	}
 
 	if delta <= 3600 {
@@ -190,9 +226,11 @@ func (s *StravaService) RefreshToken(id int64) error {
 }
 
 func checkRefreshToken(exp_time string) (int64, error) {
+	const path = "internal.service.strava.checkRefreshToken"
+
 	et_int, err := strconv.ParseInt(exp_time, 10, 32)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("%s: %w", path, err)
 	}
 
 	now_time := time.Now().Unix()
@@ -203,10 +241,12 @@ func checkRefreshToken(exp_time string) (int64, error) {
 }
 
 func (s *StravaService) getNewToken(id int64) error {
+	const path = "internal.service.strava.getNewToken"
+
 	old_refresh_token, err := s.rep.GetRefreshToken(id)
 	if err != nil {
-		s.logger.Error("error get refresh token from DB: %v", err)
-		return err
+		s.logger.Error("error get refresh token from DB", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", path, err)
 	}
 
 	request := map[string]string{
@@ -218,41 +258,46 @@ func (s *StravaService) getNewToken(id int64) error {
 
 	json_request, err := json.Marshal(request)
 	if err != nil {
-		return err
+		s.logger.Error("error make json_request", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", path, err)
 	}
 
 	req, err := http.NewRequest("POST", strava_auth_url, bytes.NewBuffer(json_request))
 	if err != nil {
-		s.logger.Error("error creating request to strava (refresh token): %v", err)
-		return err
+		s.logger.Error("error creating request to strava (refresh token)",
+			slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", path, err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		s.logger.Error("error do request to strava (refresh token): %v", err)
-		return err
+		s.logger.Error("error do request to strava (refresh token)",
+			slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", path, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		s.logger.Error("error get new refresh token, get http.status %d", resp.StatusCode)
-		return errors.New("autorization error")
+		s.logger.Error("error get new refresh token (status code != 200)",
+			slog.Int("get code", resp.StatusCode))
+		return fmt.Errorf("%s: autorization error", path)
 	}
 
 	body, _ := io.ReadAll(resp.Body)
 	var res models.RespondRefreshToken
 	err = json.Unmarshal(body, &res)
 	if err != nil && err != io.EOF {
-		s.logger.Error("error parse new refresh token: %v", err)
-		return err
+		s.logger.Error("error parse new refresh token", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", path, err)
 	}
 
 	err = s.rep.RefreshToken(id, res)
 	if err != nil {
-		s.logger.Error("error write new refresh token to DB: %v", err)
-		return err
+		s.logger.Error("error write new refresh token to DB",
+			slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", path, err)
 	} else {
 		s.logger.Info("successful get new refresh token")
 		return nil

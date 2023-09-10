@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -23,13 +24,15 @@ const (
 )
 
 func (b *Bot) handleCommand(message *tgbotapi.Message) error {
+	const path = "internal.telegram.handleCMD.handleCommand"
+
 	command := strings.ToLower(message.Command())
 	switch command {
 
 	case commandStart:
 		err := b.handleStartComand(message)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s: %w", path, err)
 		}
 	}
 
@@ -37,6 +40,8 @@ func (b *Bot) handleCommand(message *tgbotapi.Message) error {
 }
 
 func (b *Bot) handleStartComand(message *tgbotapi.Message) error {
+	const path = "internal.telegram.handleCMD.handleStartComand"
+
 	URL := fmt.Sprintf(strava_auth_URL, os.Getenv("STRAVA_CLIENT_ID"),
 		os.Getenv("STRAVA_REDIRECT_URL"), message.Chat.ID)
 
@@ -46,10 +51,17 @@ func (b *Bot) handleStartComand(message *tgbotapi.Message) error {
 	msg.ParseMode = "Markdown"
 	_, err := b.bot.Send(msg)
 	if err != nil {
-		b.service.Logger.Error("error send message to user: %v", err)
-		return err
+		b.service.Logger.Error("error send message to user",
+			slog.String("msg_text", msg_text),
+			slog.String("error", err.Error()),
+		)
+		return fmt.Errorf("%s: %w", path, err)
 	}
-	b.service.Logger.Info("Пользователю [%s (%s)] отправлена ссылка для авторизации",
-		message.From.UserName, message.From.String())
+
+	sender := fmt.Sprintf("%s (%s)",
+		message.From.UserName,
+		message.From.String())
+	b.service.Logger.Info("Пользователю отправлена ссылка для авторизации",
+		slog.String("sender", sender))
 	return nil
 }

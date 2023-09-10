@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"fmt"
+	"log/slog"
 	"strava_bot/internals/service"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -17,7 +18,7 @@ func NewBot(bot *tgbotapi.BotAPI, service *service.Service) *Bot {
 }
 
 func (b *Bot) Start() {
-	b.service.Logger.Info("Authorized on account %s", b.bot.Self.UserName)
+	b.service.Logger.Info("Authorized", slog.String("account", b.bot.Self.UserName))
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 	updates := b.bot.GetUpdatesChan(u)
@@ -27,15 +28,21 @@ func (b *Bot) Start() {
 func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 	for update := range updates {
 		if update.Message != nil {
-			b.service.Logger.Info("[%s (%s)] ввёл сообщение %s",
-				update.Message.From.UserName, update.Message.From.String(), update.Message.Text)
-
+			sender := fmt.Sprintf("%s (%s)",
+				update.Message.From.UserName,
+				update.Message.From.String())
+			b.service.Logger.Info("Получено сообщение",
+				slog.String("sender", sender),
+				slog.String("message", update.Message.Text))
 			if update.Message.IsCommand() {
-				b.service.Logger.Info("[%s (%s)] ввёл команду %s",
-					update.Message.From.UserName, update.Message.From.String(), update.Message.Text)
+				b.service.Logger.Info("Зафиксирована команда",
+					slog.String("sender", sender),
+					slog.String("cmd", update.Message.Text))
 				if err := b.handleCommand(update.Message); err != nil {
-					b.service.Logger.Error("При обработке команды %s произошла ошибка %s",
-						update.Message.Command(), err)
+					b.service.Logger.Error("При обработке команды произошла ошибка",
+						slog.String("cmd", update.Message.Command()),
+						slog.String("error", err.Error()),
+					)
 				}
 				continue
 			}
@@ -46,22 +53,27 @@ func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 			if d != nil {
 				filename, err := b.douwnloadFile(d)
 				if err != nil {
-					b.service.Logger.Error("error download file: %v", err)
+					b.service.Logger.Error("error download file",
+						slog.String("filename", filename),
+						slog.String("error", err.Error()),
+					)
 					msg := tgbotapi.NewMessage(id, "Не удалось обработать файл")
 					msg.ParseMode = "Markdown"
 					_, err := b.bot.Send(msg)
 					if err != nil {
-						b.service.Logger.Error("error send message to user: %v", err)
+						b.service.Logger.Error("error send message to user",
+							slog.String("error", err.Error()))
 					}
 				} else {
 					// upload file to strava
 					err = b.service.UploadActivity(filename, id)
 					var msg_txt string
 					if err != nil {
-						b.service.Logger.Error("error upload file to Strava server: %v", err)
+						b.service.Logger.Error("error upload file to Strava server:",
+							slog.String("error", err.Error()))
 						msg_txt = "Произошла ошибка загрузки файла на сервер Strava.\n" +
 							"Проверьте корректность файла (поддерживаются файлы .fit, .tcx и .gpx)" +
-							" и попробуйте повторить загрузку позже."
+							" или попробуйте повторить загрузку позже."
 					} else {
 						msg_txt = "Файл тренировки успешно обработан и загружен в Strava"
 					}
@@ -69,7 +81,8 @@ func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 					msg.ParseMode = "Markdown"
 					_, err = b.bot.Send(msg)
 					if err != nil {
-						b.service.Logger.Error("error send message to user: %v", err)
+						b.service.Logger.Error("error send message to user",
+							slog.String("error", err.Error()))
 					}
 				}
 			}
@@ -85,7 +98,8 @@ func (b *Bot) SuccsesAuth(id int64, username string) {
 	msg.ParseMode = "Markdown"
 	_, err := b.bot.Send(msg)
 	if err != nil {
-		b.service.Logger.Error("error send message to user: %v", err)
+		b.service.Logger.Error("error send message to user:",
+			slog.String("error", err.Error()))
 	}
 
 }

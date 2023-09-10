@@ -16,7 +16,7 @@ type AuthHandler struct {
 }
 
 type Athlete struct {
-	Id             int      `json:"id"`             // 2534833,
+	Id             int64    `json:"id"`             // 2534833,
 	Username       string   `json:"username"`       // "nullator_n",
 	Resource_state int      `json:"resource_state"` // 2,
 	Firstname      string   `json:"firstname"`      // "Vyacheslav",
@@ -41,8 +41,8 @@ type Athlete struct {
 type RespondRefreshToken struct {
 	Token_type    string `json:"token_type"`
 	Access_token  string `json:"access_token"`
-	Expires_at    int    `json:"expires_at"`
-	Expires_in    int    `json:"expires_in"`
+	Expires_at    int64  `json:"expires_at"`
+	Expires_in    int64  `json:"expires_in"`
 	Refresh_token string `json:"refresh_token"`
 }
 
@@ -54,10 +54,10 @@ type UploadActivity struct {
 }
 
 type RespondUploadActivity struct {
-	Id          int         `json:"id"`
+	Id          int64       `json:"id"`
 	Id_str      string      `json:"id_str"`
 	External_id interface{} `json:"external_id"`
 	Error       interface{} `json:"error"`
 	Status      string      `json:"status"`
-	Activity_id int         `json:"activity_id"`
+	Activity_id int64       `json:"activity_id"`
 }
