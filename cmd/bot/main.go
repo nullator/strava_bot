@@ -54,8 +54,9 @@ func main() {
 	if err != nil {
 		l.Fatal(err)
 	}
+	slog.SetDefault(log)
 
-	log.Info("start", slog.String("env", os.Getenv("ENV")))
+	log.Info("start app", slog.String("env", os.Getenv("ENV")))
 	log.Debug("debug level is enabled")
 
 	// creare TG bot
@@ -80,7 +81,7 @@ func main() {
 
 	// init
 	rep := repository.NewRepository(base)
-	service := service.NewService(rep, log)
+	service := service.NewService(rep)
 	tg_bot := telegram.NewBot(bot, service)
 	handlers := handler.NewHandler(service, tg_bot)
 	srv := new(models.Server)

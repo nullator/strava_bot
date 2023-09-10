@@ -11,11 +11,10 @@ import (
 )
 
 type TelegramService struct {
-	logger *slog.Logger
 }
 
-func NewTelegramService(log *slog.Logger) *TelegramService {
-	return &TelegramService{log}
+func NewTelegramService() *TelegramService {
+	return &TelegramService{}
 }
 
 func (tg *TelegramService) GetFile(filename, fileid string) error {
@@ -26,7 +25,7 @@ func (tg *TelegramService) GetFile(filename, fileid string) error {
 		os.Getenv("TG_TOKEN"), fileid)
 	req, err := http.NewRequest("GET", querry, nil)
 	if err != nil {
-		tg.logger.Error("error create GET file request", slog.String("error", err.Error()))
+		slog.Error("error create GET file request", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", path, err)
 	}
 	req.Header.Set("Content-Type", "application/json")
@@ -34,7 +33,7 @@ func (tg *TelegramService) GetFile(filename, fileid string) error {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		tg.logger.Error("error do request (get telegram file)",
+		slog.Error("error do request (get telegram file)",
 			slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", path, err)
 	}
@@ -44,7 +43,7 @@ func (tg *TelegramService) GetFile(filename, fileid string) error {
 	var res models.TelegramFileIdResp
 	err = json.Unmarshal(body, &res)
 	if err != nil && err != io.EOF {
-		tg.logger.Error("error parse telegram file ID", slog.String("error", err.Error()))
+		slog.Error("error parse telegram file ID", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", path, err)
 	}
 
@@ -53,7 +52,7 @@ func (tg *TelegramService) GetFile(filename, fileid string) error {
 		res.Result.File_path)
 	req, err = http.NewRequest("GET", querry, nil)
 	if err != nil {
-		tg.logger.Error("error create request (download telegram file by ID)",
+		slog.Error("error create request (download telegram file by ID)",
 			slog.String("file_path", res.Result.File_path),
 			slog.String("error", err.Error()),
 		)
@@ -62,7 +61,7 @@ func (tg *TelegramService) GetFile(filename, fileid string) error {
 
 	resp, err = client.Do(req)
 	if err != nil {
-		tg.logger.Error("error do request (download telegram file by ID)",
+		slog.Error("error do request (download telegram file by ID)",
 			slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", path, err)
 	}
@@ -70,18 +69,18 @@ func (tg *TelegramService) GetFile(filename, fileid string) error {
 
 	file, err := io.ReadAll(resp.Body)
 	if err != nil {
-		tg.logger.Error("error read file", slog.String("error", err.Error()))
+		slog.Error("error read file", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", path, err)
 	}
 	err = os.MkdirAll("activity", os.ModePerm)
 	if err != nil {
-		tg.logger.Error("error create 'activity' directory",
+		slog.Error("error create 'activity' directory",
 			slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", path, err)
 	}
 	f, err := os.OpenFile("activity/"+filename, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		tg.logger.Error("error create new file in 'activity' directory",
+		slog.Error("error create new file in 'activity' directory",
 			slog.String("filename", filename),
 			slog.String("error", err.Error()),
 		)
@@ -89,7 +88,7 @@ func (tg *TelegramService) GetFile(filename, fileid string) error {
 	}
 	_, err = f.Write(file)
 	if err != nil {
-		tg.logger.Error("error write new file in 'activity' directory",
+		slog.Error("error write new file in 'activity' directory",
 			slog.String("filename", filename),
 			slog.String("error", err.Error()),
 		)
@@ -98,14 +97,14 @@ func (tg *TelegramService) GetFile(filename, fileid string) error {
 	defer func() {
 		err := f.Close()
 		if err != nil {
-			tg.logger.Error("error save and close new activity file:",
+			slog.Error("error save and close new activity file:",
 				slog.String("filename", filename),
 				slog.String("error", err.Error()),
 			)
 		}
 	}()
 
-	tg.logger.Info("successful download and save new activity file",
+	slog.Info("successful download and save new activity file",
 		slog.String("filename", filename))
 	return nil
 

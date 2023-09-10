@@ -51,7 +51,7 @@ func (b *Bot) handleStartComand(message *tgbotapi.Message) error {
 	msg.ParseMode = "Markdown"
 	_, err := b.bot.Send(msg)
 	if err != nil {
-		b.service.Logger.Error("error send message to user",
+		slog.Error("error send message to user",
 			slog.String("msg_text", msg_text),
 			slog.String("error", err.Error()),
 		)
@@ -61,7 +61,7 @@ func (b *Bot) handleStartComand(message *tgbotapi.Message) error {
 	sender := fmt.Sprintf("%s (%s)",
 		message.From.UserName,
 		message.From.String())
-	b.service.Logger.Info("Пользователю отправлена ссылка для авторизации",
+	slog.Info("Пользователю отправлена ссылка для авторизации",
 		slog.String("sender", sender))
 	return nil
 }

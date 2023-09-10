@@ -22,12 +22,11 @@ const (
 )
 
 type StravaService struct {
-	rep    *repository.Repository
-	logger *slog.Logger
+	rep *repository.Repository
 }
 
-func NewStravaService(rep *repository.Repository, log *slog.Logger) *StravaService {
-	return &StravaService{rep: rep, logger: log}
+func NewStravaService(rep *repository.Repository) *StravaService {
+	return &StravaService{rep: rep}
 }
 
 func (s *StravaService) Auth(input *models.AuthHandler) (int, *models.StravaUser, error) {
@@ -36,7 +35,7 @@ func (s *StravaService) Auth(input *models.AuthHandler) (int, *models.StravaUser
 	// validate auth
 	code, err := validateAuthModel(input)
 	if err != nil {
-		s.logger.Error("error validate auth model: %v", err)
+		slog.Error("error validate auth model", slog.String("error", err.Error()))
 		return code, nil, err
 	}
 
@@ -50,14 +49,14 @@ func (s *StravaService) Auth(input *models.AuthHandler) (int, *models.StravaUser
 
 	json_request, err := json.Marshal(request)
 	if err != nil {
-		s.logger.Error("error generate json to make strava auth",
+		slog.Error("error generate json to make strava auth",
 			slog.String("error", err.Error()))
 		return http.StatusInternalServerError, nil, fmt.Errorf("%s: %w", path, err)
 	}
 
 	req, err := http.NewRequest("POST", strava_auth_url, bytes.NewBuffer(json_request))
 	if err != nil {
-		s.logger.Error("error POST request strava auth",
+		slog.Error("error POST request strava auth",
 			slog.String("error", err.Error()))
 		return http.StatusInternalServerError, nil, fmt.Errorf("%s: %w", path, err)
 	}
@@ -66,14 +65,14 @@ func (s *StravaService) Auth(input *models.AuthHandler) (int, *models.StravaUser
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		s.logger.Error("error make request strava auth",
+		slog.Error("error make request strava auth",
 			slog.String("error", err.Error()))
 		return http.StatusInternalServerError, nil, fmt.Errorf("%s: %w", path, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		s.logger.Error("autorization error (resp.StatusCode != 200)",
+		slog.Error("autorization error (resp.StatusCode != 200)",
 			slog.Int("get code", resp.StatusCode))
 		return http.StatusInternalServerError, nil, fmt.Errorf("%s: auth error", path)
 	}
@@ -83,13 +82,13 @@ func (s *StravaService) Auth(input *models.AuthHandler) (int, *models.StravaUser
 	var res models.StravaUser
 	err = json.Unmarshal(body, &res)
 	if err != nil && err != io.EOF {
-		s.logger.Error("error unmarshal athlete model",
+		slog.Error("error unmarshal athlete model",
 			slog.String("error", err.Error()))
 		return http.StatusInternalServerError, nil, fmt.Errorf("%s: %w", path, err)
 	}
 
 	// write data to repository
-	s.logger.Info("successful receipt of authorization data,"+
+	slog.Info("successful receipt of authorization data,"+
 		" ready to writing data to the database",
 		slog.Int64("strava_id", res.Athlete.Id),
 		slog.String("strava_name", res.Athlete.Username),
@@ -108,7 +107,7 @@ func (s *StravaService) UploadActivity(file string, id int64) error {
 
 	data, err := os.Open(file)
 	if err != nil {
-		s.logger.Error("error opening file",
+		slog.Error("error opening file",
 			slog.String("file", file),
 			slog.String("error", err.Error()),
 		)
@@ -120,12 +119,12 @@ func (s *StravaService) UploadActivity(file string, id int64) error {
 	writer := multipart.NewWriter(body)
 	part, err := writer.CreateFormFile("file", filepath.Base(file))
 	if err != nil {
-		s.logger.Error("error create part", slog.String("error", err.Error()))
+		slog.Error("error create part", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", path, err)
 	}
 	_, err = io.Copy(part, data)
 	if err != nil {
-		s.logger.Error("error copy file to part", slog.String("error", err.Error()))
+		slog.Error("error copy file to part", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", path, err)
 	}
 
@@ -133,7 +132,7 @@ func (s *StravaService) UploadActivity(file string, id int64) error {
 	file_format := string([]rune(file)[l-3 : l])
 	err = writer.WriteField("data_type", file_format)
 	if err != nil {
-		s.logger.Error("error add 'data_type' field",
+		slog.Error("error add 'data_type' field",
 			slog.String("data_type", file_format),
 			slog.String("error", err.Error()),
 		)
@@ -141,26 +140,26 @@ func (s *StravaService) UploadActivity(file string, id int64) error {
 	}
 	err = writer.Close()
 	if err != nil {
-		s.logger.Error("error close writer", slog.String("error", err.Error()))
+		slog.Error("error close writer", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", path, err)
 	}
 
 	req, err := http.NewRequest("POST", strava_api_url+"uploads", body)
 	if err != nil {
-		s.logger.Error("error create upload request", slog.String("error", err.Error()))
+		slog.Error("error create upload request", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", path, err)
 	}
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
 	err = s.RefreshToken(id)
 	if err != nil {
-		s.logger.Error("error refresh token", slog.String("error", err.Error()))
+		slog.Error("error refresh token", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", path, err)
 	}
 
 	token, err := s.rep.GetAccesToken(id)
 	if err != nil {
-		s.logger.Error("error get acces token from DB", slog.String("error", err.Error()))
+		slog.Error("error get acces token from DB", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", path, err)
 	}
 	bearer := "Bearer " + token
@@ -169,12 +168,12 @@ func (s *StravaService) UploadActivity(file string, id int64) error {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		s.logger.Error("error do request (upload file to strava)",
+		slog.Error("error do request (upload file to strava)",
 			slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", path, err)
 	} else {
 		if resp.StatusCode != 201 {
-			s.logger.Error("error do request (resp.Code != 201)",
+			slog.Error("error do request (resp.Code != 201)",
 				slog.Int("get code", resp.StatusCode))
 			return fmt.Errorf("%s: incorrect upload activity file", path)
 		}
@@ -183,12 +182,12 @@ func (s *StravaService) UploadActivity(file string, id int64) error {
 		var res models.RespondUploadActivity
 		err = json.Unmarshal(body, &res)
 		if err != nil && err != io.EOF {
-			s.logger.Error("error response processing aftet upload file to strava",
+			slog.Error("error response processing aftet upload file to strava",
 				slog.String("error", err.Error()))
 			return fmt.Errorf("%s: %w", path, err)
 		}
 		resp.Body.Close()
-		s.logger.Info("successful upload activity",
+		slog.Info("successful upload activity",
 			slog.Int64("id", res.Id),
 			slog.Int64("activity_id", res.Activity_id),
 			slog.String("status", res.Status),
@@ -219,7 +218,7 @@ func (s *StravaService) RefreshToken(id int64) error {
 	if delta <= 3600 {
 		return s.getNewToken(id)
 	} else {
-		s.logger.Info("no token refresh needed")
+		slog.Info("no token refresh needed")
 		return nil
 	}
 
@@ -245,7 +244,7 @@ func (s *StravaService) getNewToken(id int64) error {
 
 	old_refresh_token, err := s.rep.GetRefreshToken(id)
 	if err != nil {
-		s.logger.Error("error get refresh token from DB", slog.String("error", err.Error()))
+		slog.Error("error get refresh token from DB", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", path, err)
 	}
 
@@ -258,13 +257,13 @@ func (s *StravaService) getNewToken(id int64) error {
 
 	json_request, err := json.Marshal(request)
 	if err != nil {
-		s.logger.Error("error make json_request", slog.String("error", err.Error()))
+		slog.Error("error make json_request", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", path, err)
 	}
 
 	req, err := http.NewRequest("POST", strava_auth_url, bytes.NewBuffer(json_request))
 	if err != nil {
-		s.logger.Error("error creating request to strava (refresh token)",
+		slog.Error("error creating request to strava (refresh token)",
 			slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", path, err)
 	}
@@ -273,14 +272,14 @@ func (s *StravaService) getNewToken(id int64) error {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		s.logger.Error("error do request to strava (refresh token)",
+		slog.Error("error do request to strava (refresh token)",
 			slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", path, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		s.logger.Error("error get new refresh token (status code != 200)",
+		slog.Error("error get new refresh token (status code != 200)",
 			slog.Int("get code", resp.StatusCode))
 		return fmt.Errorf("%s: autorization error", path)
 	}
@@ -289,17 +288,17 @@ func (s *StravaService) getNewToken(id int64) error {
 	var res models.RespondRefreshToken
 	err = json.Unmarshal(body, &res)
 	if err != nil && err != io.EOF {
-		s.logger.Error("error parse new refresh token", slog.String("error", err.Error()))
+		slog.Error("error parse new refresh token", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", path, err)
 	}
 
 	err = s.rep.RefreshToken(id, res)
 	if err != nil {
-		s.logger.Error("error write new refresh token to DB",
+		slog.Error("error write new refresh token to DB",
 			slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", path, err)
 	} else {
-		s.logger.Info("successful get new refresh token")
+		slog.Info("successful get new refresh token")
 		return nil
 	}
 }

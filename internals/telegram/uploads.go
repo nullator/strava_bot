@@ -10,7 +10,7 @@ import (
 func (b *Bot) douwnloadFile(document *tgbotapi.Document) (string, error) {
 	// check file type
 	file_name := document.FileName
-	b.service.Logger.Info("get file from user",
+	slog.Info("get file from user",
 		slog.String("file_name", file_name))
 	l := len([]rune(file_name))
 

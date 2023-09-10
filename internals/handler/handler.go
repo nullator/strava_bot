@@ -27,14 +27,14 @@ func (h *Handler) InitRouters() *gin.Engine {
 }
 
 func (h *Handler) auth(c *gin.Context) {
-	h.services.Logger.Info("на auth поступил запрос авторизации")
+	slog.Info("на auth поступил запрос авторизации")
 	var input *models.AuthHandler
 	var strava_user *models.StravaUser
 
 	err := c.ShouldBind(&input)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err.Error())
-		h.services.Logger.Error("не удалось распарсить полученный запрос в JSON",
+		slog.Error("не удалось распарсить полученный запрос в JSON",
 			slog.String("input", c.FullPath()),
 			slog.String("error", err.Error()),
 		)
@@ -44,7 +44,7 @@ func (h *Handler) auth(c *gin.Context) {
 	code, strava_user, err := h.services.Auth(input)
 	if err != nil {
 		c.JSON(code, err.Error())
-		h.services.Logger.Error("auth error", slog.String("error", err.Error()))
+		slog.Error("auth error", slog.String("error", err.Error()))
 		return
 	}
 
@@ -52,7 +52,7 @@ func (h *Handler) auth(c *gin.Context) {
 
 	tg_id, err := strconv.ParseInt(input.ID, 10, 64)
 	if err != nil {
-		h.services.Logger.Error("при выполнении авторизации не удалось распарсить ID в Telegra	m id",
+		slog.Error("при выполнении авторизации не удалось распарсить ID в Telegra	m id",
 			slog.String("error", err.Error()))
 	}
 
