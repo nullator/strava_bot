@@ -32,13 +32,6 @@ func NewStravaService(rep *repository.Repository) *StravaService {
 func (s *StravaService) Auth(input *models.AuthHandler) (int, *models.StravaUser, error) {
 	const path = "internal.service.strava.Auth"
 
-	// validate auth
-	code, err := validateAuthModel(input)
-	if err != nil {
-		slog.Error("error validate auth model", slog.String("error", err.Error()))
-		return code, nil, err
-	}
-
 	// make request to STRAVA
 	request := map[string]string{
 		"client_id":     os.Getenv("STRAVA_CLIENT_ID"),

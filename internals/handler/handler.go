@@ -41,7 +41,19 @@ func (h *Handler) auth(c *gin.Context) {
 		return
 	}
 
-	code, strava_user, err := h.services.Auth(input)
+	code, err := validateAuthModel(input)
+	if err != nil {
+		c.JSON(code, err.Error())
+		slog.Error("input data validation error",
+			slog.String("input.Code", input.Code),
+			slog.String("input.ID", input.ID),
+			slog.String("input.Scope", input.Scope),
+			slog.String("error", err.Error()),
+		)
+		return
+	}
+
+	code, strava_user, err = h.services.Auth(input)
 	if err != nil {
 		c.JSON(code, err.Error())
 		slog.Error("auth error", slog.String("error", err.Error()))
@@ -52,7 +64,7 @@ func (h *Handler) auth(c *gin.Context) {
 
 	tg_id, err := strconv.ParseInt(input.ID, 10, 64)
 	if err != nil {
-		slog.Error("при выполнении авторизации не удалось распарсить ID в Telegra	m id",
+		slog.Error("при выполнении авторизации не удалось распарсить ID в TelegramId",
 			slog.String("error", err.Error()))
 	}
 

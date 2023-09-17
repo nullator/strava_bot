@@ -8,6 +8,12 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
+type BotInterface interface {
+	SuccsesAuth(id int64, username string) error
+}
+
+var _ BotInterface = (*Bot)(nil)
+
 type Bot struct {
 	bot     *tgbotapi.BotAPI
 	service *service.Service
@@ -91,7 +97,7 @@ func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 }
 
 // TODO: прикреплять картинку с примером шаринга файла
-func (b *Bot) SuccsesAuth(id int64, username string) {
+func (b *Bot) SuccsesAuth(id int64, username string) error {
 	msg_txt := fmt.Sprintf("Успешная авторизация в аккаунт *%s*\n"+
 		"Для загрузки тренировки отправляй боту файлы в формате .fit, .tcx или .gpx\nVPN не требуется", username)
 	msg := tgbotapi.NewMessage(id, msg_txt)
@@ -101,5 +107,5 @@ func (b *Bot) SuccsesAuth(id int64, username string) {
 		slog.Error("error send message to user:",
 			slog.String("error", err.Error()))
 	}
-
+	return err
 }

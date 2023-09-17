@@ -107,5 +107,4 @@ func (tg *TelegramService) GetFile(filename, fileid string) error {
 	slog.Info("successful download and save new activity file",
 		slog.String("filename", filename))
 	return nil
-
 }
