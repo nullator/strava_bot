@@ -17,9 +17,9 @@ func (b *BotService) douwnloadFile(document *tgbotapi.Document) (string, string,
 
 	file_format := string([]rune(file_name)[l-4 : l])
 	file_format = strings.ToLower(file_format)
-	err_comment := fmt.Sprintf("Получен файл некорректного формата (%s), "+
-		"принимаются файлы только формата .txt, .gpx и .fit", file_format)
 	if file_format != ".fit" && file_format != ".tcx" && file_format != ".gpx" {
+		err_comment := fmt.Sprintf("Получен файл некорректного формата (%s), "+
+			"принимаются файлы только формата .txt, .gpx и .fit", file_format)
 		return "", err_comment, fmt.Errorf("incorrect file format (%s)", file_format)
 	}
 
