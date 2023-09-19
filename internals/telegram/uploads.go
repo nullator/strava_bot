@@ -7,7 +7,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func (b *Bot) douwnloadFile(document *tgbotapi.Document) (string, error) {
+func (b *BotService) douwnloadFile(document *tgbotapi.Document) (string, error) {
 	// check file type
 	file_name := document.FileName
 	slog.Info("get file from user",

@@ -9,6 +9,11 @@ type BotInterface struct {
 	mock.Mock
 }
 
+// Start provides a mock function with given fields:
+func (_m *BotInterface) Start() {
+	_m.Called()
+}
+
 // SuccsesAuth provides a mock function with given fields: id, username
 func (_m *BotInterface) SuccsesAuth(id int64, username string) error {
 	ret := _m.Called(id, username)

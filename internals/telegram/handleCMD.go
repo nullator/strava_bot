@@ -19,11 +19,11 @@ const (
 		"redirect_uri=%s&" +
 		"response_type=code&" +
 		"approval_prompt=auto&" +
-		"scope=activity:write,read&" +
+		"scope=activity:write,read_all&" +
 		"state=%d"
 )
 
-func (b *Bot) handleCommand(message *tgbotapi.Message) error {
+func (b *BotService) handleCommand(message *tgbotapi.Message) error {
 	const path = "internal.telegram.handleCMD.handleCommand"
 
 	command := strings.ToLower(message.Command())
@@ -39,7 +39,7 @@ func (b *Bot) handleCommand(message *tgbotapi.Message) error {
 	return nil
 }
 
-func (b *Bot) handleStartComand(message *tgbotapi.Message) error {
+func (b *BotService) handleStartComand(message *tgbotapi.Message) error {
 	const path = "internal.telegram.handleCMD.handleStartComand"
 
 	URL := fmt.Sprintf(strava_auth_URL, os.Getenv("STRAVA_CLIENT_ID"),

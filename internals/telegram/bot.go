@@ -10,20 +10,31 @@ import (
 
 type BotInterface interface {
 	SuccsesAuth(id int64, username string) error
+	Start()
 }
 
 var _ BotInterface = (*Bot)(nil)
 
 type Bot struct {
+	BotInterface
+}
+
+func NewBot(bot *tgbotapi.BotAPI, service *service.Service) *Bot {
+	return &Bot{
+		BotInterface: NewBotInterface(bot, service),
+	}
+}
+
+type BotService struct {
 	bot     *tgbotapi.BotAPI
 	service *service.Service
 }
 
-func NewBot(bot *tgbotapi.BotAPI, service *service.Service) *Bot {
-	return &Bot{bot, service}
+func NewBotInterface(bot *tgbotapi.BotAPI, service *service.Service) *BotService {
+	return &BotService{bot, service}
 }
 
-func (b *Bot) Start() {
+func (b *BotService) Start() {
 	slog.Info("Authorized", slog.String("account", b.bot.Self.UserName))
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
@@ -31,7 +42,7 @@ func (b *Bot) Start() {
 	b.handleUpdates(updates)
 }
 
-func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
+func (b *BotService) handleUpdates(updates tgbotapi.UpdatesChannel) {
 	for update := range updates {
 		if update.Message != nil {
 			sender := fmt.Sprintf("%s (%s)",
@@ -97,7 +108,7 @@ func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 }
 
 // TODO: прикреплять картинку с примером шаринга файла
-func (b *Bot) SuccsesAuth(id int64, username string) error {
+func (b *BotService) SuccsesAuth(id int64, username string) error {
 	msg_txt := fmt.Sprintf("Успешная авторизация в аккаунт *%s*\n"+
 		"Для загрузки тренировки отправляй боту файлы в формате .fit, .tcx или .gpx\nVPN не требуется", username)
 	msg := tgbotapi.NewMessage(id, msg_txt)

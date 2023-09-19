@@ -86,7 +86,7 @@ func main() {
 	handlers := handler.NewHandler(service, tg_bot)
 	srv := new(models.Server)
 	go func() {
-		err := srv.Run(os.Getenv("SERVER_PORT"), handlers.InitRouters())
+		err := srv.Run(os.Getenv("SERVER_PORT"), handlers.InitRoutersV2())
 		if err != nil {
 			l.Fatalf("error running server: %v", err)
 		}
@@ -116,11 +116,10 @@ func setupLogger(env string) (*slog.Logger, error) {
 
 	switch env {
 	case "local":
-		h := logger.NewCustomSlogHandler(slog.NewJSONHandler(
-			os.Stdout, &slog.HandlerOptions{
-				Level:     slog.LevelDebug,
-				AddSource: false,
-			}))
+		h := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+			Level:     slog.LevelDebug,
+			AddSource: false,
+		})
 		log = slog.New(h)
 	case "prod":
 		h := logger.NewCustomSlogHandler(slog.NewJSONHandler(

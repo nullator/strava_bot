@@ -8,7 +8,6 @@ import (
 type Strava interface {
 	Auth(input *models.AuthHandler) (int, *models.StravaUser, error)
 	RefreshToken(id int64) error
-	getNewToken(id int64) error
 	UploadActivity(file string, id int64) error
 }
 

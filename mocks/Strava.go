@@ -74,20 +74,6 @@ func (_m *Strava) UploadActivity(file string, id int64) error {
 	return r0
 }
 
-// getNewToken provides a mock function with given fields: id
-func (_m *Strava) getNewToken(id int64) error {
-	ret := _m.Called(id)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(int64) error); ok {
-		r0 = rf(id)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // NewStrava creates a new instance of Strava. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewStrava(t interface {

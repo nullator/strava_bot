@@ -7,6 +7,7 @@ require github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 require (
 	github.com/boltdb/bolt v1.3.1
 	github.com/gin-gonic/gin v1.8.2
+	github.com/go-chi/chi v1.5.5
 	github.com/joho/godotenv v1.5.1
 	github.com/smartystreets/goconvey v1.7.2
 	github.com/stretchr/testify v1.8.1
