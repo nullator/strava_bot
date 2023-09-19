@@ -68,13 +68,14 @@ func (b *BotService) handleUpdates(updates tgbotapi.UpdatesChannel) {
 			id := update.Message.From.ID
 			// if get file (d) from user
 			if d != nil {
-				filename, err := b.douwnloadFile(d)
+				filename, err_comment, err := b.douwnloadFile(d)
 				if err != nil {
 					slog.Error("error download file",
 						slog.String("filename", filename),
 						slog.String("error", err.Error()),
 					)
-					msg := tgbotapi.NewMessage(id, "Не удалось обработать файл")
+					err_comment := fmt.Sprintf("Не удалось обработать файл. %s", err_comment)
+					msg := tgbotapi.NewMessage(id, err_comment)
 					msg.ParseMode = "Markdown"
 					_, err := b.bot.Send(msg)
 					if err != nil {
