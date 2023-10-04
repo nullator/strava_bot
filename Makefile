@@ -12,3 +12,6 @@ clean:
 	go clean
 	rm ./output/${BINARY_NAME}-mac
 	rm ./output/${BINARY_NAME}-linux
+
+mock:
+	mockery --all

@@ -3,6 +3,7 @@ package repository
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strava_bot/internals/models"
 	"strava_bot/pkg/base"
@@ -135,4 +136,24 @@ func (r *Repository) GetActivityId(id int64) (string, error) {
 	}
 
 	return activity_id, nil
+}
+
+func (r *Repository) SaveStatus(id int64, status string) error {
+	tg_id := fmt.Sprintf("%d", id)
+	err := r.db.Save("status", status, tg_id)
+
+	slog.Debug("Успешно сохранены данные в БД")
+	return err
+
+}
+
+func (r *Repository) GetStatus(id int64) (string, error) {
+	tg_id := fmt.Sprintf("%d", id)
+
+	status, err := r.db.Get("status", tg_id)
+	if err != nil {
+		return "", err
+	}
+
+	return status, nil
 }

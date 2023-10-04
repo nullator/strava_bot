@@ -8,13 +8,15 @@ import (
 	"net/http"
 	"os"
 	"strava_bot/internals/models"
+	"strava_bot/internals/repository"
 )
 
 type TelegramService struct {
+	rep *repository.Repository
 }
 
-func NewTelegramService() *TelegramService {
-	return &TelegramService{}
+func NewTelegramService(rep *repository.Repository) *TelegramService {
+	return &TelegramService{rep}
 }
 
 func (tg *TelegramService) GetFile(filename, fileid string) error {
@@ -107,4 +109,12 @@ func (tg *TelegramService) GetFile(filename, fileid string) error {
 	slog.Info("successful download and save new activity file",
 		slog.String("filename", filename))
 	return nil
+}
+
+func (tg *TelegramService) GetStatus(id int64) (string, error) {
+	return tg.rep.GetStatus(id)
+}
+
+func (tg *TelegramService) SaveStatus(id int64, status string) error {
+	return tg.rep.SaveStatus(id, status)
 }

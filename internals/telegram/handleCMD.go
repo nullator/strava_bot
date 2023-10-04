@@ -11,7 +11,7 @@ import (
 
 const (
 	commandStart    = "start"
-	commandGet      = "get"
+	commandFeedback = "feedback"
 	commandSettings = "settings"
 
 	strava_auth_URL = "https://www.strava.com/oauth/authorize?" +
@@ -31,6 +31,11 @@ func (b *BotService) handleCommand(message *tgbotapi.Message) error {
 
 	case commandStart:
 		err := b.handleStartComand(message)
+		if err != nil {
+			return fmt.Errorf("%s: %w", path, err)
+		}
+	case commandFeedback:
+		err := b.handleFeedbackComand(message)
 		if err != nil {
 			return fmt.Errorf("%s: %w", path, err)
 		}
@@ -63,5 +68,28 @@ func (b *BotService) handleStartComand(message *tgbotapi.Message) error {
 		message.From.String())
 	slog.Info("Пользователю отправлена ссылка для авторизации",
 		slog.String("sender", sender))
+	return nil
+}
+
+func (b *BotService) handleFeedbackComand(message *tgbotapi.Message) error {
+	const path = "internal.telegram.handleCMD.handleFeedbackComand"
+
+	err := b.service.Telegram.SaveStatus(message.Chat.ID, "feedback")
+	if err != nil {
+		slog.Error("Ошибка сохранения в БД данных о статусе пользователя",
+			slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", path, err)
+	}
+	msg_text := fmt.Sprintf("Введи сообщение, которое будет доставлено разработчику бота" +
+		" (можно приложить файлы, скриншоты и т.п.):\n")
+	msg := tgbotapi.NewMessage(message.Chat.ID, msg_text)
+	_, err = b.bot.Send(msg)
+	if err != nil {
+		slog.Error("error send message to user",
+			slog.String("msg_text", msg_text),
+			slog.String("error", err.Error()),
+		)
+	}
+	slog.Info("Выполнена команда Feedback")
 	return nil
 }
